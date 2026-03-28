@@ -2,27 +2,39 @@
 
 namespace App\Services;
 
-use App\Enums\UnitEnum;
 use App\Models\Inventory;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Request;
+use Illuminate\Support\Str;
 
 class InventoryService
 {
     /**
      * @param array $data
-     * @return bool
+     * @return void
      */
-    public function store(array $data): bool
+    public function store(array $data): void
     {
-        $inventory = new Inventory();
+        $user = Auth::user();
 
-        $inventory->created_by = Auth::user()->id;
-        $inventory->updated_by = Auth::user()->id;
-        $inventory->product_id = 3;
-        $inventory->increment('quantity', 5);
-        $inventory->unit = UnitEnum::KG->value;
+        foreach ($data as $row) {
+            $inventory = Inventory::where('product_id', $row['product_id'])->first();
 
-        return $inventory->save();
+            if (!$inventory) {
+                $inventory = new Inventory();
+
+                $inventory->created_by = $user->id;
+                $inventory->uuid = Str::uuid();
+            }
+
+            $inventory->updated_by = $user->id;
+
+            if (!isset($row['available_on'])) {
+                $inventory->available_on = now();
+            }
+
+            $inventory->increment('quantity', $row['quantity']);
+
+            $inventory->save();
+        }
     }
 }

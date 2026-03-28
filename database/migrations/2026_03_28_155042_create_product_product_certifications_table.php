@@ -11,14 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('product_properties', function (Blueprint $table) {
+        Schema::create('product_product_certifications', function (Blueprint $table) {
             $table->id();
             $table->foreignId('product_id')->references('id')->on('products');
-            $table->foreignId('created_by')->references('id')->on('users');
-            $table->foreignId('updated_by')->references('id')->on('users');
-            $table->string('key');
-            $table->text('value');
-            $table->enum('type', ['string', 'integer', 'boolean', 'json'])->default('string');
+            $table->foreignId('product_certification_id')->references('id')->on('product_certifications');
+            $table->integer('scale')->default(0);
             $table->timestamps();
         });
     }
@@ -28,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('product_properties');
+        Schema::dropIfExists('product_product_certifications');
     }
 };

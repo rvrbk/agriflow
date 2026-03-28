@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ProductPropertyTypeEnum;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -11,16 +12,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('inventories', function (Blueprint $table) {
+        Schema::create('product_properties', function (Blueprint $table) {
             $table->id();
-            $table->uuid();
-            $table->foreignId('created_by')->references('id')->on('users');
-            $table->foreignId('updated_by')->references('id')->on('users');
             $table->foreignId('product_id')->references('id')->on('products');
-            $table->float('quantity')->default(0);
-            $table->timestamp('available_on')->nullable();
+            $table->enum('type', array_column(ProductPropertyTypeEnum::cases(), 'value'))->default(ProductPropertyTypeEnum::STRING->value);
+            $table->boolean('system')->default(false);
+            $table->json('key');
+            $table->json('value');
             $table->timestamps();
-            $table->softDeletes();
         });
     }
 
@@ -29,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('inventories');
+        Schema::dropIfExists('product_properties');
     }
 };

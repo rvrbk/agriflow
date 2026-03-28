@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\InventoryService;
+use App\Services\ProductService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
-class InventoryController extends Controller
+class ProductController extends Controller
 {
     /**
      * @param Request $request
@@ -13,7 +14,7 @@ class InventoryController extends Controller
      */
     public function post(Request $request)
     {
-        app()->make(InventoryService::class)->store($request->all());
+        app()->make(ProductService::class)->store($request->all());
 
         return response()->json([
             $request->all()
