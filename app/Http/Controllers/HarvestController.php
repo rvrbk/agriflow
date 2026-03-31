@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\ProductService;
+
+use App\Services\HarvestService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
-class ProductController extends Controller
+class HarvestController extends Controller
 {
     /**
      * @param Request $request
@@ -15,7 +15,7 @@ class ProductController extends Controller
      */
     public function post(Request $request): JsonResponse
     {
-        app()->make(ProductService::class)->store($request->all());
+        app()->make(HarvestService::class)->store($request->all());
 
         return response()->json([
             $request->all()

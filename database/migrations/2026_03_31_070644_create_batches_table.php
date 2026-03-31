@@ -1,7 +1,6 @@
 <?php
 
-use App\Enums\CodeTypeEnum;
-use App\Enums\UnitEnum;
+use App\Enums\QualityEnum;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -13,13 +12,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('products', function (Blueprint $table) {
+        Schema::create('batches', function (Blueprint $table) {
             $table->id();
             $table->uuid();
-            $table->json('name');
-            $table->string('code')->nullable();
-            $table->enum('code_type', array_column(CodeTypeEnum::cases(), 'value'))->nullable();
-            $table->enum('unit', array_column(UnitEnum::cases(), 'value'))->default(UnitEnum::PCS->value);
+            $table->foreignId('corporation_id')->references('id')->on('corporations');
+            $table->timestamp('harvested_on');
+            $table->timestamp('expires_on')->nullable();
+            $table->enum('quality', array_column(QualityEnum::cases(), 'value'))->nullable();
             $table->timestamps();
         });
     }
@@ -29,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('products');
+        Schema::dropIfExists('batches');
     }
 };
