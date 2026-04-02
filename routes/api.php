@@ -8,6 +8,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('user', function (Request $request) {
+        return $request->user();
+    })->name('user.current');
+
     Route::post('product', [ProductController::class, 'post'])->name('product.post');
     Route::post('warehouse', [WarehouseController::class, 'post'])->name('warehouse.post');
     Route::post('corporation', [CorporationController::class, 'post'])->name('corporation.post');
