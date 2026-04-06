@@ -3,6 +3,20 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#2f6e4a">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="default">
+        <meta name="apple-mobile-web-app-title" content="AgriFlow">
+        <link rel="apple-touch-icon" href="/icons/pwa-192x192.png">
+        @if (file_exists(public_path('build/manifest.webmanifest')))
+            <link rel="manifest" href="/build/manifest.webmanifest">
+        @elseif (file_exists(public_path('manifest.webmanifest')))
+            <link rel="manifest" href="/manifest.webmanifest">
+        @elseif (file_exists(public_path('hot')))
+            @php $viteHotServer = rtrim(trim(file_get_contents(public_path('hot'))), '/'); @endphp
+            <link rel="manifest" href="{{ $viteHotServer }}/manifest.webmanifest">
+        @endif
 
         <title>{{ config('app.name', 'Laravel') }}</title>
 
