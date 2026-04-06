@@ -28,7 +28,7 @@ class CorporationService
             }
 
             $corporation->name = $row['name'];
-            $corporation->location = isset($row['location']) ? json_encode($row['location']) : null;
+            $corporation->location = $row['location'] ?? null;
             $corporation->address = $row['address'] ?? null;
             $corporation->city = $row['city'] ?? null;
             $corporation->state = $row['state'] ?? null;

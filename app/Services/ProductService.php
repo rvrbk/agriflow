@@ -4,8 +4,6 @@ namespace App\Services;
 
 use App\Models\Product;
 use App\Models\ProductProperty;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class ProductService
@@ -16,9 +14,11 @@ class ProductService
      */
     public function store(array $data): void
     {
-        $user = Auth::user();
-
         foreach ($data as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+
             $product = null;
         
             if (isset($row['uuid'])) {
@@ -31,12 +31,43 @@ class ProductService
                 $product->uuid = Str::uuid();
             }
 
-            $this->storeTranslations($product, $row['translations']);
+            $this->storeTranslations($product, $row);
+
+            if (array_key_exists('code', $row)) {
+                $product->code = $row['code'];
+            }
+
+            if (array_key_exists('code_type', $row)) {
+                $product->code_type = $row['code_type'];
+            }
+
+            if (array_key_exists('unit', $row) && $row['unit']) {
+                $product->unit = $row['unit'];
+            }
 
             $product->save();
 
-            $this->storeProperties($product, $row['properties']);
+            if (array_key_exists('properties', $row) && is_array($row['properties'])) {
+                $this->storeProperties($product, $row['properties']);
+            }
         }
+    }
+
+    /**
+     * @param string $uuid
+     * @return bool
+     */
+    public function deleteByUuid(string $uuid): bool
+    {
+        $product = Product::where('uuid', $uuid)->first();
+
+        if (!$product) {
+            return false;
+        }
+
+        ProductProperty::where('product_id', $product->id)->delete();
+
+        return (bool) $product->delete();
     }
 
     /**
@@ -44,12 +75,39 @@ class ProductService
       * @param array $translations
      * @return void
      */
-    private function storeTranslations(Product $product, array $translations): void
+    private function storeTranslations(Product $product, array $row): void
     {
+        if (isset($row['name']) && is_string($row['name']) && $row['name'] !== '') {
+            $product->setTranslation('name', 'en', $row['name']);
+            return;
+        }
+
+        $translations = $row['translations'] ?? [];
+
+        if (!is_array($translations)) {
+            return;
+        }
+
         foreach ($translations as $translation) {
+            if (!is_array($translation)) {
+                continue;
+            }
+
             foreach ($translation as $property => $localizations) {
+                if (!is_array($localizations)) {
+                    continue;
+                }
+
                 foreach ($localizations as $localization) {
+                    if (!is_array($localization)) {
+                        continue;
+                    }
+
                     foreach ($localization as $code => $value) {
+                        if (!is_string($value) || $value === '') {
+                            continue;
+                        }
+
                         $product->setTranslation($property, $code, $value);
                     }
                 }
