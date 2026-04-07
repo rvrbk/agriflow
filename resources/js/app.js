@@ -6,8 +6,10 @@ import { registerSW } from 'virtual:pwa-register';
 import router from './router';
 import App from './App.vue';
 import { i18n, initializeLocale } from './i18n';
+import { initializeOfflineQueue } from './services/offlineQueue';
 
 registerSW({ immediate: true });
+initializeOfflineQueue();
 
 const app = createApp(App);
 
