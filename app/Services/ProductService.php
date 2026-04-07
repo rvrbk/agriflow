@@ -2,12 +2,17 @@
 
 namespace App\Services;
 
+use App\Models\Inventory;
 use App\Models\Product;
 use App\Models\ProductProperty;
 use Illuminate\Support\Str;
 
 class ProductService
 {
+    public const DELETE_DELETED = 'deleted';
+    public const DELETE_NOT_FOUND = 'not_found';
+    public const DELETE_LINKED_TO_HARVEST = 'linked_to_harvest';
+
     /**
      * @param array $data
      * @return void
@@ -55,19 +60,29 @@ class ProductService
 
     /**
      * @param string $uuid
-     * @return bool
+     * @return string
      */
-    public function deleteByUuid(string $uuid): bool
+    public function deleteByUuid(string $uuid): string
     {
         $product = Product::where('uuid', $uuid)->first();
 
         if (!$product) {
-            return false;
+            return self::DELETE_NOT_FOUND;
+        }
+
+        $hasHarvestLinks = Inventory::query()
+            ->where('product_id', $product->id)
+            ->whereNotNull('batch_id')
+            ->exists();
+
+        if ($hasHarvestLinks) {
+            return self::DELETE_LINKED_TO_HARVEST;
         }
 
         ProductProperty::where('product_id', $product->id)->delete();
+        $product->delete();
 
-        return (bool) $product->delete();
+        return self::DELETE_DELETED;
     }
 
     /**

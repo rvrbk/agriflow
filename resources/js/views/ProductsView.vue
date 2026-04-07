@@ -45,6 +45,7 @@ function normalizeApiProduct(product) {
         code: product.code ?? '',
         code_type: product.code_type ?? 'none',
         unit: product.unit ?? 'pcs',
+        is_linked_to_harvest: Boolean(product.is_linked_to_harvest),
     };
 }
 
@@ -156,6 +157,11 @@ async function saveEdit(product) {
 }
 
 async function deleteProduct(product) {
+    if (product.is_linked_to_harvest) {
+        editError[product.uuid] = t('products.messages.delete_linked_error');
+        return;
+    }
+
     const productName = product.name || t('products.unnamed');
     const confirmed = window.confirm(t('products.messages.delete_confirm', { name: productName }));
 
@@ -169,7 +175,11 @@ async function deleteProduct(product) {
         await http.delete(`/api/product/${product.uuid}`);
         await loadProducts();
     } catch (error) {
-        editError[product.uuid] = t('products.messages.delete_error');
+        if (error?.response?.status === 409) {
+            editError[product.uuid] = t('products.messages.delete_linked_error');
+        } else {
+            editError[product.uuid] = t('products.messages.delete_error');
+        }
     } finally {
         deleteSaving[product.uuid] = false;
     }
@@ -273,10 +283,14 @@ void loadProducts();
                         <button
                             type="button"
                             class="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-sm text-red-700 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-70"
-                            :disabled="deleteSaving[product.uuid]"
+                            :disabled="deleteSaving[product.uuid] || product.is_linked_to_harvest"
                             @click="deleteProduct(product)"
                         >
-                            {{ deleteSaving[product.uuid] ? t('products.actions.deleting') : t('products.actions.delete') }}
+                            {{
+                                product.is_linked_to_harvest
+                                    ? t('products.actions.delete_blocked')
+                                    : (deleteSaving[product.uuid] ? t('products.actions.deleting') : t('products.actions.delete'))
+                            }}
                         </button>
                     </div>
                 </div>

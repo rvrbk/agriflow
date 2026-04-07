@@ -12,6 +12,19 @@ class CorporationController extends Controller
     /**
      * @return JsonResponse
      */
+    public function list(): JsonResponse
+    {
+        $corporations = Corporation::query()
+            ->orderBy('name')
+            ->get(['uuid', 'name'])
+            ->values();
+
+        return response()->json($corporations);
+    }
+
+    /**
+     * @return JsonResponse
+     */
     public function get(): JsonResponse
     {
         $corporation = Corporation::query()->latest('id')->first();

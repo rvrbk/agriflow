@@ -22,10 +22,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('product', [ProductController::class, 'list'])->name('product.list');
     Route::post('product', [ProductController::class, 'post'])->name('product.post');
     Route::delete('product/{uuid}', [ProductController::class, 'delete'])->name('product.delete');
+    Route::get('warehouse', [WarehouseController::class, 'list'])->name('warehouse.list');
     Route::post('warehouse', [WarehouseController::class, 'post'])->name('warehouse.post');
     Route::get('geocoding/reverse', [GeocodingController::class, 'reverse'])->name('geocoding.reverse');
     Route::get('countries', [CountryController::class, 'list'])->name('countries.list');
+    Route::get('corporations', [CorporationController::class, 'list'])->name('corporation.list');
     Route::get('corporation', [CorporationController::class, 'get'])->name('corporation.get');
     Route::post('corporation', [CorporationController::class, 'post'])->name('corporation.post');
+    Route::get('harvest', [HarvestController::class, 'list'])->name('harvest.list');
     Route::post('harvest', [HarvestController::class, 'post'])->name('harvest.post');
+    Route::delete('harvest/{uuid}', [HarvestController::class, 'delete'])->name('harvest.delete');
 });

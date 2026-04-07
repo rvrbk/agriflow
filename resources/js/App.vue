@@ -56,9 +56,9 @@
                     <button class="mt-1.5 block w-full cursor-pointer rounded-lg bg-[#d6e9d6] px-2.5 py-2 text-left text-[#1e3020] hover:bg-[#c8e0c9]" type="button">
                         {{ t('menu.inventory') }}
                     </button>
-                    <button class="mt-1.5 block w-full cursor-pointer rounded-lg bg-[#d6e9d6] px-2.5 py-2 text-left text-[#1e3020] hover:bg-[#c8e0c9]" type="button">
+                    <RouterLink to="/harvests" class="mt-1.5 block w-full rounded-lg bg-[#d6e9d6] px-2.5 py-2 text-left text-[#1e3020] hover:bg-[#c8e0c9]">
                         {{ t('menu.harvests') }}
-                    </button>
+                    </RouterLink>
                 </div>
 
                 <div class="rounded-xl border border-[#dde5d7] bg-[linear-gradient(180deg,_#fcfff8_0%,_#f4f8ed_100%)] p-3.5">
