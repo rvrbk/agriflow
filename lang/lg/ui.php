@@ -77,6 +77,8 @@ return [
         'messages' => [
             'loading' => 'Tukyasoma ebintu...',
             'empty' => 'Tewali bintu bifuniddwa.',
+            'search_label' => 'Noonya ebintu',
+            'search_placeholder' => 'Noonya ku linnya, koodi, kika, kipimo oba UUID...',
             'load_error' => 'Tetusobodde kusoma ebintu.',
             'add_error' => 'Tetusobodde kwongera kintu. Kebera ebitundu oddemu ogeze.',
             'save_error' => 'Tetusobodde kutereka enkyukakyuka ku kintu kino.',
@@ -129,6 +131,8 @@ return [
         'messages' => [
             'loading' => 'Tukyasoma amakungula...',
             'empty' => 'Tewali makungula gafuniddwa.',
+            'search_label' => 'Noonya amakungula',
+            'search_placeholder' => 'Noonya ku kintu, batch, sitowa, kampuni, mutindo oba QR koodi...',
             'load_error' => 'Tetusobodde kusoma amakungula.',
             'add_error' => 'Tetusobodde kwongera okukungula. Kebera ebitundu oddemu ogeze.',
             'save_error' => 'Tetusobodde kutereka enkyukakyuka ku kukungula kuno.',
@@ -179,6 +183,8 @@ return [
         'messages' => [
             'loading' => 'Tukyasoma sitooko...',
             'empty' => 'Tewali biwandiiko bya sitooko bifuniddwa.',
+            'search_label' => 'Noonya sitooko',
+            'search_placeholder' => 'Noonya ku kintu, batch, sitowa, mutindo, kifo oba olunaku lw\'okukungula...',
             'load_error' => 'Tetusobodde kusoma biwandiiko bya sitooko.',
             'adjust_error' => 'Tetusobodde kukyusa sitooko.',
             'insufficient_quantity' => 'Tosobola kukendeeza okusinga obungi obuliwo.',

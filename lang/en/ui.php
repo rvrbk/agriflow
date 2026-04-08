@@ -77,6 +77,8 @@ return [
         'messages' => [
             'loading' => 'Loading products...',
             'empty' => 'No products found.',
+            'search_label' => 'Search products',
+            'search_placeholder' => 'Search by name, code, type, unit, or UUID...',
             'load_error' => 'Could not load products.',
             'add_error' => 'Could not add product. Please check the values and try again.',
             'save_error' => 'Could not save changes for this product.',
@@ -129,6 +131,8 @@ return [
         'messages' => [
             'loading' => 'Loading harvests...',
             'empty' => 'No harvests found.',
+            'search_label' => 'Search harvests',
+            'search_placeholder' => 'Search by product, batch, warehouse, corporation, quality, or QR code...',
             'load_error' => 'Could not load harvests.',
             'add_error' => 'Could not add harvest. Please check the values and try again.',
             'save_error' => 'Could not save changes for this harvest.',
@@ -179,6 +183,8 @@ return [
         'messages' => [
             'loading' => 'Loading inventory...',
             'empty' => 'No inventory records found.',
+            'search_label' => 'Search inventory',
+            'search_placeholder' => 'Search by product, batch, warehouse, quality, location, or harvest date...',
             'load_error' => 'Could not load inventory records.',
             'adjust_error' => 'Could not update inventory.',
             'insufficient_quantity' => 'Cannot subtract more than current quantity.',

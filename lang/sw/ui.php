@@ -77,6 +77,8 @@ return [
         'messages' => [
             'loading' => 'Inapakia bidhaa...',
             'empty' => 'Hakuna bidhaa zilizopatikana.',
+            'search_label' => 'Tafuta bidhaa',
+            'search_placeholder' => 'Tafuta kwa jina, msimbo, aina, kipimo au UUID...',
             'load_error' => 'Imeshindwa kupakia bidhaa.',
             'add_error' => 'Imeshindwa kuongeza bidhaa. Tafadhali hakiki thamani ujaribu tena.',
             'save_error' => 'Imeshindwa kuhifadhi mabadiliko ya bidhaa hii.',
@@ -129,6 +131,8 @@ return [
         'messages' => [
             'loading' => 'Inapakia mavuno...',
             'empty' => 'Hakuna mavuno yaliyopatikana.',
+            'search_label' => 'Tafuta mavuno',
+            'search_placeholder' => 'Tafuta kwa bidhaa, batch, ghala, kampuni, ubora au msimbo wa QR...',
             'load_error' => 'Imeshindwa kupakia mavuno.',
             'add_error' => 'Imeshindwa kuongeza mavuno. Tafadhali hakiki thamani ujaribu tena.',
             'save_error' => 'Imeshindwa kuhifadhi mabadiliko ya mavuno haya.',
@@ -179,6 +183,8 @@ return [
         'messages' => [
             'loading' => 'Inapakia hesabu...',
             'empty' => 'Hakuna rekodi za hesabu zilizopatikana.',
+            'search_label' => 'Tafuta hesabu',
+            'search_placeholder' => 'Tafuta kwa bidhaa, batch, ghala, ubora, eneo au tarehe ya mavuno...',
             'load_error' => 'Imeshindwa kupakia rekodi za hesabu.',
             'adjust_error' => 'Imeshindwa kusasisha hesabu.',
             'insufficient_quantity' => 'Huwezi kupunguza zaidi ya kiasi kilichopo.',

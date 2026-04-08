@@ -13,6 +13,7 @@ const corporations = ref([]);
 
 const loading = ref(true);
 const loadError = ref('');
+const searchTerm = ref('');
 const addFormOpen = ref(false);
 const savingAdd = ref(false);
 const addError = ref('');
@@ -29,6 +30,25 @@ const qualityOptions = computed(() => [
     { value: 'medium', label: t('harvests.quality.medium') },
     { value: 'low', label: t('harvests.quality.low') },
 ]);
+
+const filteredHarvests = computed(() => {
+    const query = searchTerm.value.trim().toLowerCase();
+
+    if (!query) {
+        return harvests.value;
+    }
+
+    return harvests.value.filter((harvest) => {
+        return [
+            harvest.product_name,
+            harvest.warehouse_name,
+            harvest.corporation_name,
+            harvest.batch_uuid,
+            harvest.qr_code,
+            harvest.quality,
+        ].some((value) => String(value || '').toLowerCase().includes(query));
+    });
+});
 
 const newHarvest = reactive({
     product_uuid: '',
@@ -488,9 +508,19 @@ void initializePage();
         <p v-if="loading" class="text-sm text-[#4e5f4f]">{{ t('harvests.messages.loading') }}</p>
         <p v-if="loadError" class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{{ loadError }}</p>
 
+        <label class="mb-4 block" v-if="!loading">
+            <span class="mb-1 block text-sm font-medium text-[#1f2a1d]">{{ t('harvests.messages.search_label') }}</span>
+            <input
+                v-model="searchTerm"
+                type="text"
+                :placeholder="t('harvests.messages.search_placeholder')"
+                class="w-full rounded-lg border border-[#ccd8c7] bg-white px-3 py-2"
+            >
+        </label>
+
         <div v-if="!loading" class="space-y-4">
             <article
-                v-for="harvest in harvests"
+                v-for="harvest in filteredHarvests"
                 :key="harvest.batch_uuid"
                 class="rounded-lg border border-[#ccd8c7] bg-white p-4"
             >
@@ -634,7 +664,7 @@ void initializePage();
                 </form>
             </article>
 
-            <p v-if="harvests.length === 0" class="rounded-lg border border-[#ccd8c7] bg-white px-3 py-2 text-sm text-[#4e5f4f]">
+            <p v-if="filteredHarvests.length === 0" class="rounded-lg border border-[#ccd8c7] bg-white px-3 py-2 text-sm text-[#4e5f4f]">
                 {{ t('harvests.messages.empty') }}
             </p>
         </div>
