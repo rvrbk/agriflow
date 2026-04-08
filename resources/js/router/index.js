@@ -5,8 +5,11 @@ import CorporationsView from '../views/CorporationsView.vue';
 import ProductsView from '../views/ProductsView.vue';
 import HarvestsView from '../views/HarvestsView.vue';
 import InventoryView from '../views/InventoryView.vue';
+import WarehousesView from '../views/WarehousesView.vue';
 import HarvestPublicView from '../views/HarvestPublicView.vue';
 import LoginView from '../views/LoginView.vue';
+import UsersView from '../views/UsersView.vue';
+import SetPasswordView from '../views/SetPasswordView.vue';
 
 const routes = [
     {
@@ -40,6 +43,18 @@ const routes = [
         meta: { requiresAuth: true },
     },
     {
+        path: '/warehouses',
+        name: 'warehouses',
+        component: WarehousesView,
+        meta: { requiresAuth: true },
+    },
+    {
+        path: '/users',
+        name: 'users',
+        component: UsersView,
+        meta: { requiresAuth: true },
+    },
+    {
         path: '/harvest/:batchUuid',
         name: 'harvest-public',
         component: HarvestPublicView,
@@ -48,6 +63,12 @@ const routes = [
         path: '/login',
         name: 'login',
         component: LoginView,
+        meta: { guestOnly: true },
+    },
+    {
+        path: '/set-password',
+        name: 'set-password',
+        component: SetPasswordView,
         meta: { guestOnly: true },
     },
 ];

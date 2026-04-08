@@ -2,12 +2,17 @@
 
 namespace App\Services;
 
+use App\Models\Inventory;
 use App\Models\Warehouse;
 use App\Models\Corporation;
 use Illuminate\Support\Str;
 
 class WarehouseService
 {
+    public const DELETE_DELETED = 'deleted';
+    public const DELETE_NOT_FOUND = 'not_found';
+    public const DELETE_LINKED_TO_INVENTORY = 'linked_to_inventory';
+
     /**
      * @param array $data
      * @return void
@@ -45,5 +50,30 @@ class WarehouseService
 
             $warehouse->save();
         }
+    }
+
+    /**
+     * @param string $uuid
+     * @return string
+     */
+    public function deleteByUuid(string $uuid): string
+    {
+        $warehouse = Warehouse::where('uuid', $uuid)->first();
+
+        if (!$warehouse) {
+            return self::DELETE_NOT_FOUND;
+        }
+
+        $hasInventoryLinks = Inventory::query()
+            ->where('warehouse_id', $warehouse->id)
+            ->exists();
+
+        if ($hasInventoryLinks) {
+            return self::DELETE_LINKED_TO_INVENTORY;
+        }
+
+        $warehouse->delete();
+
+        return self::DELETE_DELETED;
     }
 }

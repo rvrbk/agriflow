@@ -15,8 +15,20 @@ class WarehouseController extends Controller
     public function list(): JsonResponse
     {
         $warehouses = Warehouse::query()
+            ->leftJoin('corporations', 'warehouses.corporation_id', '=', 'corporations.id')
             ->orderBy('name')
-            ->get(['uuid', 'name'])
+            ->get([
+                'warehouses.uuid',
+                'warehouses.name',
+                'warehouses.capacity',
+                'warehouses.address',
+                'warehouses.city',
+                'warehouses.state',
+                'warehouses.country',
+                'warehouses.location',
+                'corporations.uuid as corporation_uuid',
+                'corporations.name as corporation_name',
+            ])
             ->values();
 
         return response()->json($warehouses);
@@ -33,5 +45,30 @@ class WarehouseController extends Controller
         return response()->json([
             $request->all()
         ], 201);
+    }
+
+    /**
+     * @param string $uuid
+     * @return JsonResponse
+     */
+    public function delete(string $uuid): JsonResponse
+    {
+        $result = app()->make(WarehouseService::class)->deleteByUuid($uuid);
+
+        if ($result === WarehouseService::DELETE_NOT_FOUND) {
+            return response()->json([
+                'message' => 'Warehouse not found.',
+            ], 404);
+        }
+
+        if ($result === WarehouseService::DELETE_LINKED_TO_INVENTORY) {
+            return response()->json([
+                'message' => 'Warehouse is linked to inventory records and cannot be deleted.',
+            ], 409);
+        }
+
+        return response()->json([
+            'message' => 'Warehouse deleted.',
+        ]);
     }
 }

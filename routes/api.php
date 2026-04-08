@@ -3,6 +3,7 @@
 use App\Http\Controllers\HarvestController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\WarehouseController;
 use App\Http\Controllers\CorporationController;
 use App\Http\Controllers\CountryController;
@@ -27,6 +28,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('product/{uuid}', [ProductController::class, 'delete'])->name('product.delete');
     Route::get('warehouse', [WarehouseController::class, 'list'])->name('warehouse.list');
     Route::post('warehouse', [WarehouseController::class, 'post'])->name('warehouse.post');
+    Route::delete('warehouse/{uuid}', [WarehouseController::class, 'delete'])->name('warehouse.delete');
     Route::get('geocoding/reverse', [GeocodingController::class, 'reverse'])->name('geocoding.reverse');
     Route::get('countries', [CountryController::class, 'list'])->name('countries.list');
     Route::get('corporations', [CorporationController::class, 'list'])->name('corporation.list');
@@ -37,4 +39,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('harvest/{uuid}', [HarvestController::class, 'delete'])->name('harvest.delete');
     Route::get('inventory', [InventoryController::class, 'list'])->name('inventory.list');
     Route::post('inventory/adjust', [InventoryController::class, 'adjust'])->name('inventory.adjust');
+    Route::get('users', [UserController::class, 'list'])->name('users.list');
+    Route::post('users', [UserController::class, 'post'])->name('users.post');
+    Route::delete('users/{id}', [UserController::class, 'delete'])->name('users.delete');
 });
