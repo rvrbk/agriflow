@@ -4,6 +4,8 @@ import DashboardView from '../views/DashboardView.vue';
 import CorporationsView from '../views/CorporationsView.vue';
 import ProductsView from '../views/ProductsView.vue';
 import HarvestsView from '../views/HarvestsView.vue';
+import InventoryView from '../views/InventoryView.vue';
+import HarvestPublicView from '../views/HarvestPublicView.vue';
 import LoginView from '../views/LoginView.vue';
 
 const routes = [
@@ -30,6 +32,17 @@ const routes = [
         name: 'harvests',
         component: HarvestsView,
         meta: { requiresAuth: true },
+    },
+    {
+        path: '/inventory',
+        name: 'inventory',
+        component: InventoryView,
+        meta: { requiresAuth: true },
+    },
+    {
+        path: '/harvest/:batchUuid',
+        name: 'harvest-public',
+        component: HarvestPublicView,
     },
     {
         path: '/login',

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\HarvestController;
+use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\WarehouseController;
 use App\Http\Controllers\CorporationController;
@@ -13,6 +14,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('translations/{locale}', [TranslationController::class, 'show'])
     ->whereIn('locale', ['en', 'lg', 'sw'])
     ->name('translations.show');
+
+Route::get('harvest/public/{batchUuid}', [HarvestController::class, 'publicShow'])->name('harvest.public.show');
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('user', function (Request $request) {
@@ -32,4 +35,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('harvest', [HarvestController::class, 'list'])->name('harvest.list');
     Route::post('harvest', [HarvestController::class, 'post'])->name('harvest.post');
     Route::delete('harvest/{uuid}', [HarvestController::class, 'delete'])->name('harvest.delete');
+    Route::get('inventory', [InventoryController::class, 'list'])->name('inventory.list');
+    Route::post('inventory/adjust', [InventoryController::class, 'adjust'])->name('inventory.adjust');
 });

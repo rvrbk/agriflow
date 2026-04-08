@@ -41,6 +41,34 @@ const newHarvest = reactive({
     quality: 'medium',
 });
 
+function getProductByUuid(productUuid) {
+    return products.value.find((product) => product.uuid === productUuid) || null;
+}
+
+function getProductUnit(productUuid) {
+    return getProductByUuid(productUuid)?.unit || 'pcs';
+}
+
+function getUnitLabelForProduct(productUuid) {
+    const unit = getProductUnit(productUuid);
+
+    if (['kg', 'g', 'l', 'ml', 'pcs'].includes(unit)) {
+        return t(`products.units.${unit}`);
+    }
+
+    return String(unit).toUpperCase();
+}
+
+function getQuantityStepForProduct(productUuid) {
+    const unit = getProductUnit(productUuid);
+
+    if (unit === 'pcs') {
+        return 1;
+    }
+
+    return 0.01;
+}
+
 function toDateTimeLocal(value) {
     if (!value) {
         return '';
@@ -409,8 +437,17 @@ void initializePage();
                 </label>
 
                 <label class="block">
-                    <span class="mb-1 block text-sm font-medium text-[#1f2a1d]">{{ t('harvests.fields.quantity') }}</span>
-                    <input v-model.number="newHarvest.quantity" required min="0" step="0.01" type="number" class="w-full rounded-lg border border-[#ccd8c7] bg-white px-3 py-2">
+                    <span class="mb-1 block text-sm font-medium text-[#1f2a1d]">
+                        {{ t('harvests.fields.quantity') }} ({{ getUnitLabelForProduct(newHarvest.product_uuid) }})
+                    </span>
+                    <input
+                        v-model.number="newHarvest.quantity"
+                        required
+                        min="0"
+                        :step="getQuantityStepForProduct(newHarvest.product_uuid)"
+                        type="number"
+                        class="w-full rounded-lg border border-[#ccd8c7] bg-white px-3 py-2"
+                    >
                 </label>
 
                 <label class="block">
@@ -460,7 +497,9 @@ void initializePage();
                 <div class="flex flex-col justify-between gap-3 md:flex-row md:items-start">
                     <div class="space-y-1">
                         <h3 class="text-lg font-semibold text-[#1f2a1d]">{{ harvest.product_name || t('harvests.unnamed') }}</h3>
-                        <p class="text-sm text-[#4e5f4f]">{{ t('harvests.fields.quantity') }}: {{ harvest.quantity }}</p>
+                        <p class="text-sm text-[#4e5f4f]">
+                            {{ t('harvests.fields.quantity') }}: {{ harvest.quantity }} {{ getUnitLabelForProduct(harvest.product_uuid) }}
+                        </p>
                         <p class="text-sm text-[#4e5f4f]">{{ t('harvests.fields.warehouse') }}: {{ harvest.warehouse_name || '-' }}</p>
                         <p class="text-sm text-[#4e5f4f]">{{ t('harvests.fields.corporation') }}: {{ harvest.corporation_name || '-' }}</p>
                         <p class="text-sm text-[#4e5f4f]">{{ t('harvests.fields.harvested_on') }}: {{ harvest.harvested_on || '-' }}</p>
@@ -534,8 +573,17 @@ void initializePage();
                         </label>
 
                         <label class="block">
-                            <span class="mb-1 block text-sm font-medium text-[#1f2a1d]">{{ t('harvests.fields.quantity') }}</span>
-                            <input v-model.number="editForms[harvest.batch_uuid].quantity" required min="0" step="0.01" type="number" class="w-full rounded-lg border border-[#ccd8c7] bg-white px-3 py-2">
+                            <span class="mb-1 block text-sm font-medium text-[#1f2a1d]">
+                                {{ t('harvests.fields.quantity') }} ({{ getUnitLabelForProduct(editForms[harvest.batch_uuid].product_uuid) }})
+                            </span>
+                            <input
+                                v-model.number="editForms[harvest.batch_uuid].quantity"
+                                required
+                                min="0"
+                                :step="getQuantityStepForProduct(editForms[harvest.batch_uuid].product_uuid)"
+                                type="number"
+                                class="w-full rounded-lg border border-[#ccd8c7] bg-white px-3 py-2"
+                            >
                         </label>
 
                         <label class="block">
