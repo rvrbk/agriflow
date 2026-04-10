@@ -50,9 +50,9 @@
             <div class="grid grid-cols-1 gap-4 px-4 py-4 md:grid-cols-2 md:px-5 md:pb-5">
                 <div class="rounded-xl border border-[#dde5d7] bg-[linear-gradient(180deg,_#fcfff8_0%,_#f4f8ed_100%)] p-3.5">
                     <p class="mb-2 text-xs font-bold uppercase tracking-[0.08em] text-[#46633f]">{{ t('menu.main') }}</p>
-                    <button class="mt-1.5 block w-full cursor-pointer rounded-lg bg-[#d6e9d6] px-2.5 py-2 text-left text-[#1e3020] hover:bg-[#c8e0c9]" type="button">
+                    <RouterLink to="/" class="mt-1.5 block w-full rounded-lg bg-[#d6e9d6] px-2.5 py-2 text-left text-[#1e3020] hover:bg-[#c8e0c9]">
                         {{ t('menu.dashboard') }}
-                    </button>
+                    </RouterLink>
                     <RouterLink to="/inventory" class="mt-1.5 block w-full rounded-lg bg-[#d6e9d6] px-2.5 py-2 text-left text-[#1e3020] hover:bg-[#c8e0c9]">
                         {{ t('menu.inventory') }}
                     </RouterLink>
