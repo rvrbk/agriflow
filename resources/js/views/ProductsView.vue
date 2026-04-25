@@ -26,11 +26,6 @@ const unitOptions = computed(() => [
     { value: 'ml', label: t('products.units.ml') },
     { value: 'pcs', label: t('products.units.pcs') },
 ]);
-const codeTypeOptions = computed(() => [
-    { value: 'none', label: t('products.code_types.none') },
-    { value: 'barcode', label: t('products.code_types.barcode') },
-    { value: 'qr', label: t('products.code_types.qr') },
-]);
 
 const filteredProducts = computed(() => {
     const query = searchTerm.value.trim().toLowerCase();
@@ -42,8 +37,6 @@ const filteredProducts = computed(() => {
     return products.value.filter((product) => {
         return [
             product.name,
-            product.code,
-            product.code_type,
             product.unit,
             product.uuid,
         ].some((value) => String(value || '').toLowerCase().includes(query));
@@ -52,8 +45,6 @@ const filteredProducts = computed(() => {
 
 const newProduct = reactive({
     name: '',
-    code: '',
-    code_type: 'none',
     unit: 'pcs',
 });
 
@@ -61,8 +52,6 @@ function normalizeApiProduct(product) {
     return {
         uuid: product.uuid,
         name: product.name ?? '',
-        code: product.code ?? '',
-        code_type: product.code_type ?? 'none',
         unit: product.unit ?? 'pcs',
         is_linked_to_harvest: Boolean(product.is_linked_to_harvest),
     };
@@ -70,16 +59,12 @@ function normalizeApiProduct(product) {
 
 function resetNewForm() {
     newProduct.name = '';
-    newProduct.code = '';
-    newProduct.code_type = 'none';
     newProduct.unit = 'pcs';
 }
 
 function initEditForm(product) {
     editForms[product.uuid] = {
         name: product.name ?? '',
-        code: product.code ?? '',
-        code_type: product.code_type ?? 'none',
         unit: product.unit ?? 'pcs',
     };
 }
@@ -115,8 +100,6 @@ async function addProduct() {
         await http.post('/api/product', [
             {
                 name: newProduct.name,
-                code: newProduct.code || null,
-                code_type: newProduct.code_type === 'none' ? null : newProduct.code_type,
                 unit: newProduct.unit,
                 properties: [],
             },
@@ -159,8 +142,6 @@ async function saveEdit(product) {
             {
                 uuid: product.uuid,
                 name: form.name,
-                code: form.code || null,
-                code_type: form.code_type === 'none' ? null : form.code_type,
                 unit: form.unit,
                 properties: [],
             },
@@ -239,22 +220,6 @@ void loadProducts();
                 </label>
 
                 <label class="block">
-                    <span class="mb-1 block text-sm font-medium text-[#1f2a1d]">{{ t('products.fields.code') }}</span>
-                    <input
-                        v-model="newProduct.code"
-                        type="text"
-                        class="w-full rounded-lg border border-[#ccd8c7] bg-white px-3 py-2"
-                    >
-                </label>
-
-                <label class="block">
-                    <span class="mb-1 block text-sm font-medium text-[#1f2a1d]">{{ t('products.fields.code_type') }}</span>
-                    <select v-model="newProduct.code_type" class="w-full rounded-lg border border-[#ccd8c7] bg-white px-3 py-2">
-                        <option v-for="option in codeTypeOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
-                    </select>
-                </label>
-
-                <label class="block">
                     <span class="mb-1 block text-sm font-medium text-[#1f2a1d]">{{ t('products.fields.unit') }}</span>
                     <select v-model="newProduct.unit" class="w-full rounded-lg border border-[#ccd8c7] bg-white px-3 py-2">
                         <option v-for="option in unitOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
@@ -296,8 +261,6 @@ void loadProducts();
                 <div class="flex items-start justify-between gap-3">
                     <div>
                         <h3 class="text-lg font-semibold text-[#1f2a1d]">{{ product.name || t('products.unnamed') }}</h3>
-                        <p class="text-sm text-[#4e5f4f]">{{ t('products.fields.code') }}: {{ product.code || '-' }}</p>
-                        <p class="text-sm text-[#4e5f4f]">{{ t('products.fields.code_type') }}: {{ product.code_type || '-' }}</p>
                         <p class="text-sm text-[#4e5f4f]">{{ t('products.fields.unit') }}: {{ product.unit || '-' }}</p>
                     </div>
 
@@ -340,22 +303,6 @@ void loadProducts();
                                 type="text"
                                 class="w-full rounded-lg border border-[#ccd8c7] bg-white px-3 py-2"
                             >
-                        </label>
-
-                        <label class="block">
-                            <span class="mb-1 block text-sm font-medium text-[#1f2a1d]">{{ t('products.fields.code') }}</span>
-                            <input
-                                v-model="editForms[product.uuid].code"
-                                type="text"
-                                class="w-full rounded-lg border border-[#ccd8c7] bg-white px-3 py-2"
-                            >
-                        </label>
-
-                        <label class="block">
-                            <span class="mb-1 block text-sm font-medium text-[#1f2a1d]">{{ t('products.fields.code_type') }}</span>
-                            <select v-model="editForms[product.uuid].code_type" class="w-full rounded-lg border border-[#ccd8c7] bg-white px-3 py-2">
-                                <option v-for="option in codeTypeOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
-                            </select>
                         </label>
 
                         <label class="block">

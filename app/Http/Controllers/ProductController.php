@@ -27,8 +27,6 @@ class ProductController extends Controller
                 return [
                     'uuid' => $product->uuid,
                     'name' => $product->getTranslation('name', 'en', false) ?: '',
-                    'code' => $product->code,
-                    'code_type' => $product->code_type,
                     'unit' => $product->unit,
                     'is_linked_to_harvest' => isset($linkedProductIds[$product->id]),
                 ];

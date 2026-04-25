@@ -38,14 +38,6 @@ class ProductService
 
             $this->storeTranslations($product, $row);
 
-            if (array_key_exists('code', $row)) {
-                $product->code = $row['code'];
-            }
-
-            if (array_key_exists('code_type', $row)) {
-                $product->code_type = $row['code_type'];
-            }
-
             if (array_key_exists('unit', $row) && $row['unit']) {
                 $product->unit = $row['unit'];
             }

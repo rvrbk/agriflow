@@ -430,6 +430,95 @@ Content-Type: application/json
 }
 ```
 
+### Sell Inventory
+```http
+POST /api/inventory/sell
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+    "batch_uuid": "11111111-e89b-12d3-a456-426614174000",
+    "amount": 25.50,
+    "price": 10.99
+}
+```
+
+**Request Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `batch_uuid` | string | Yes | The UUID of the batch to sell from |
+| `amount` | number | Yes | The quantity to sell (must be > 0) |
+| `price` | number | No | The sale price per unit (optional, but recommended for tracking revenue) |
+| `currency` | string | No | Currency code: USD or UGX (defaults to USD) |
+
+**Response (200 OK):**
+```json
+{
+    "message": "Inventory sold.",
+    "quantity": 74.50,
+    "total_value": 279.245,
+    "sale_uuid": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+**Response (404 Not Found):**
+```json
+{
+    "message": "Batch not found."
+}
+```
+
+**Response (404 Not Found):**
+```json
+{
+    "message": "Inventory not found."
+}
+```
+
+**Response (422 Unprocessable Entity):**
+```json
+{
+    "message": "Insufficient inventory quantity."
+}
+```
+
+### List Sales History
+```http
+GET /api/sales
+Authorization: Bearer {token}
+```
+
+**Response (200 OK):**
+```json
+[
+    {
+        "uuid": "550e8400-e29b-41d4-a716-446655440000",
+        "product_name": "Maize",
+        "product_unit": "kg",
+        "batch_uuid": "11111111-e89b-12d3-a456-426614174000",
+        "warehouse_name": "Main Warehouse",
+        "quantity": 25.5,
+        "unit_price": 10.99,
+        "total_value": 279.245,
+        "created_at": "2026-04-25T10:30:00.000000Z"
+    },
+    {
+        "uuid": "550e8400-e29b-41d4-a716-446655440001",
+        "product_name": "Coffee",
+        "product_unit": "kg",
+        "batch_uuid": "22222222-e89b-12d3-a456-426614174000",
+        "warehouse_name": "Warehouse East",
+        "quantity": 50.0,
+        "unit_price": 15.50,
+        "total_value": 775.00,
+        "created_at": "2026-04-25T09:15:00.000000Z"
+    }
+]
+```
+
+**Query Parameters:**
+- None currently supported (returns all sales, newest first)
+
 ---
 
 ## Corporation Endpoints

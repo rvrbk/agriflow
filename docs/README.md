@@ -13,6 +13,7 @@ docs/
 ├── architecture/                # Technical Architecture Documentation
 │   ├── SYSTEM_ARCHITECTURE.md   # High-level system architecture overview
 │   ├── API_DOCUMENTATION.md     # Complete API endpoint documentation
+│   ├── SALES_FEATURE.md         # Sales feature user guide & technical docs
 │   ├── DATABASE_SCHEMA.md       # Database design and ERD
 │   └── CODE_STYLE_GUIDE.md      # Code style conventions and best practices
 │
@@ -28,6 +29,7 @@ docs/
 |----------|-------------|------------------|
 | [SYSTEM_ARCHITECTURE.md](./architecture/SYSTEM_ARCHITECTURE.md) | System architecture, component diagrams, data flow | Developers, Architects, New Team Members |
 | [API_DOCUMENTATION.md](./architecture/API_DOCUMENTATION.md) | REST API endpoints, authentication, request/response examples | Developers, QA, API Consumers |
+| [SALES_FEATURE.md](./architecture/SALES_FEATURE.md) | Sales feature user guide, technical implementation, API | Developers, Users, QA |
 | [DATABASE_SCHEMA.md](./architecture/DATABASE_SCHEMA.md) | Entity-Relationship Diagram, table definitions, constraints | Backend Devs, DBAs, QA |
 | [CODE_STYLE_GUIDE.md](./architecture/CODE_STYLE_GUIDE.md) | PHP, JavaScript/Vue, Laravel, Testing style guide | All Developers |
 
@@ -82,6 +84,7 @@ docs/
 |----------|----------------|------------------|
 | SYSTEM_ARCHITECTURE.md | Major architectural changes | Backend/Dev Team |
 | API_DOCUMENTATION.md | New/changed endpoints | Backend Dev Team |
+| SALES_FEATURE.md | Sales feature changes | Backend/Dev Team |
 | DATABASE_SCHEMA.md | Schema migrations | Backend Dev Team |
 | CODE_STYLE_GUIDE.md | Style guide updates | All Devs |
 | TEAM_STRUCTURE.md | Team changes | Orchestrator |
@@ -100,7 +103,8 @@ docs/
 | Document | Last Updated | Version | Author |
 |----------|--------------|---------|--------|
 | SYSTEM_ARCHITECTURE.md | April 13, 2026 | 1.0 | AI Assistant |
-| API_DOCUMENTATION.md | April 13, 2026 | 1.0 | AI Assistant |
+| API_DOCUMENTATION.md | April 25, 2026 | 1.1 | AI Assistant |
+| SALES_FEATURE.md | April 25, 2026 | 1.0 | AI Assistant |
 | DATABASE_SCHEMA.md | April 13, 2026 | 1.0 | AI Assistant |
 | CODE_STYLE_GUIDE.md | April 13, 2026 | 1.0 | AI Assistant |
 | TEAM_STRUCTURE.md | April 13, 2026 | 1.0 | AI Assistant |
@@ -117,6 +121,7 @@ For questions about documentation:
 
 - [System Architecture](./architecture/SYSTEM_ARCHITECTURE.md)
 - [API Documentation](./architecture/API_DOCUMENTATION.md)
+- [Sales Feature Guide](./architecture/SALES_FEATURE.md)
 - [Database Schema](./architecture/DATABASE_SCHEMA.md)
 - [Code Style Guide](./architecture/CODE_STYLE_GUIDE.md)
 - [Team Structure](./team/TEAM_STRUCTURE.md)

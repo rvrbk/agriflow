@@ -10,6 +10,9 @@ import HarvestPublicView from '../views/HarvestPublicView.vue';
 import LoginView from '../views/LoginView.vue';
 import UsersView from '../views/UsersView.vue';
 import SetPasswordView from '../views/SetPasswordView.vue';
+import SellInventoryView from '../views/SellInventoryView.vue';
+import SalesHistoryView from '../views/SalesHistoryView.vue';
+import ReceiptView from '../views/ReceiptView.vue';
 
 const routes = [
     {
@@ -52,6 +55,24 @@ const routes = [
         path: '/users',
         name: 'users',
         component: UsersView,
+        meta: { requiresAuth: true },
+    },
+    {
+        path: '/sales',
+        name: 'sales',
+        component: SellInventoryView,
+        meta: { requiresAuth: true },
+    },
+    {
+        path: '/sales-history',
+        name: 'sales-history',
+        component: SalesHistoryView,
+        meta: { requiresAuth: true },
+    },
+    {
+        path: '/receipt/:uuid',
+        name: 'receipt',
+        component: ReceiptView,
         meta: { requiresAuth: true },
     },
     {

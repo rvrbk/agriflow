@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'exchangerate' => [
+        'key' => env('EXCHANGE_RATE_API_KEY'),
+        'fallback_ugx_rate' => env('FALLBACK_UGX_RATE', 3700.00),
+    ],
+
 ];

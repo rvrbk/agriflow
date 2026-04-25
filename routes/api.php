@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\HarvestController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ProductController;
@@ -39,6 +40,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('harvest/{uuid}', [HarvestController::class, 'delete'])->name('harvest.delete');
     Route::get('inventory', [InventoryController::class, 'list'])->name('inventory.list');
     Route::post('inventory/adjust', [InventoryController::class, 'adjust'])->name('inventory.adjust');
+    Route::post('inventory/sell', [InventoryController::class, 'sell'])->name('inventory.sell');
+    Route::get('sales', [InventoryController::class, 'salesHistory'])->name('sales.history');
+    Route::get('sales/{uuid}', [InventoryController::class, 'getSale'])->name('sales.get');
+    Route::get('currencies', [CurrencyController::class, 'index'])->name('currencies.list');
+    Route::get('currencies/rate/{from}/{to}', [CurrencyController::class, 'rate'])->name('currencies.rate');
+    Route::post('currencies/convert', [CurrencyController::class, 'convert'])->name('currencies.convert');
+    Route::put('currencies/{code}', [CurrencyController::class, 'update'])->name('currencies.update');
     Route::get('users', [UserController::class, 'list'])->name('users.list');
     Route::post('users', [UserController::class, 'post'])->name('users.post');
     Route::delete('users/{id}', [UserController::class, 'delete'])->name('users.delete');
