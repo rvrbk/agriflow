@@ -18,6 +18,7 @@ class WarehouseController extends Controller
             ->leftJoin('corporations', 'warehouses.corporation_id', '=', 'corporations.id')
             ->orderBy('name')
             ->get([
+                'warehouses.id',
                 'warehouses.uuid',
                 'warehouses.name',
                 'warehouses.capacity',

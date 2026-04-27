@@ -13,6 +13,7 @@ import SetPasswordView from '../views/SetPasswordView.vue';
 import SellInventoryView from '../views/SellInventoryView.vue';
 import SalesHistoryView from '../views/SalesHistoryView.vue';
 import ReceiptView from '../views/ReceiptView.vue';
+import FiscalYearsView from '../views/FiscalYearsView.vue';
 
 const routes = [
     {
@@ -67,6 +68,12 @@ const routes = [
         path: '/sales-history',
         name: 'sales-history',
         component: SalesHistoryView,
+        meta: { requiresAuth: true },
+    },
+    {
+        path: '/fiscal-years',
+        name: 'fiscal-years',
+        component: FiscalYearsView,
         meta: { requiresAuth: true },
     },
     {

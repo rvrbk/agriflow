@@ -75,24 +75,25 @@ async function loadSale() {
     loading.value = false;
 }
 
-// Watch for when data is loaded and ready to print
-function triggerPrint() {
-    // Use nextTick to ensure DOM is updated
-    nextTick(() => {
-        setTimeout(() => {
-            window.print();
-        }, 250);
-    });
-}
-
 onMounted(() => {
     loadSale();
 });
 
-// Print only after data is loaded and no error
+// Print handler
+function handlePrint() {
+    if (loading.value || error.value || !sale.value) return;
+    window.print();
+}
+
+// Auto-print when data is loaded
 watch([loading, sale, error], ([isLoading, currentSale, currentError]) => {
     if (!isLoading && currentSale && !currentError) {
-        triggerPrint();
+        // Use nextTick to ensure DOM is updated from the sale data
+        nextTick(() => {
+            setTimeout(() => {
+                handlePrint();
+            }, 250);
+        });
     }
 }, { immediate: false });
 </script>
@@ -195,10 +196,10 @@ watch([loading, sale, error], ([isLoading, currentSale, currentError]) => {
                 <p class="mt-1">{{ t('sales.receipt.powered_by') }}</p>
             </div>
 
-            <!-- Important: Don't print these buttons -->
-            <div class="no-print mt-6 flex justify-center gap-4">
+            <!-- Print/Action Buttons - Hidden when printing -->
+            <div class="no-print mt-6 flex justify-center gap-4" v-if="!loading && !error">
                 <button
-                    @click="printReceipt"
+                    @click="handlePrint"
                     class="rounded-lg bg-[#2f6e4a] px-6 py-2 text-sm font-medium text-white hover:bg-[#275d3f]"
                 >
                     {{ t('sales.receipt.print') }}
@@ -213,12 +214,12 @@ watch([loading, sale, error], ([isLoading, currentSale, currentError]) => {
         </div>
 
         <!-- Loading state -->
-        <div v-if="loading" class="fixed inset-0 flex items-center justify-center bg-white/80">
+        <div v-if="loading" class="fixed inset-0 z-50 flex items-center justify-center bg-white/80">
             <p class="text-[#4e5f4f]">{{ t('sales.receipt.loading') }}</p>
         </div>
 
         <!-- Error state -->
-        <div v-if="error && !loading" class="fixed inset-0 flex items-center justify-center bg-white/80">
+        <div v-if="error && !loading" class="fixed inset-0 z-50 flex items-center justify-center bg-white/80">
             <div class="text-center text-red-600">
                 <p class="text-xl font-semibold">{{ error }}</p>
                 <p class="mt-2 text-sm text-gray-500">{{ t('sales.receipt.error_hint') }}</p>
@@ -229,19 +230,3 @@ watch([loading, sale, error], ([isLoading, currentSale, currentError]) => {
         </div>
     </div>
 </template>
-
-<style scoped>
-@media print {
-    .no-print {
-        display: none !important;
-    }
-    .receipt-container {
-        box-shadow: none;
-        background: white;
-        padding: 0;
-    }
-    body {
-        background: white;
-    }
-}
-</style>

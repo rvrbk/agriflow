@@ -19,6 +19,7 @@ class UserController extends Controller
         $currentUserId = $request->user()?->id;
 
         $users = User::query()
+            ->with(['corporation'])
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function (User $user) use ($currentUserId): array {
@@ -26,6 +27,8 @@ class UserController extends Controller
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
+                    'corporation_id' => $user->corporation_id,
+                    'corporation_name' => $user->corporation?->name ?? null,
                     'created_at' => $user->created_at?->toISOString(),
                     'is_current_user' => $currentUserId !== null && $user->id === $currentUserId,
                 ];
@@ -86,5 +89,56 @@ class UserController extends Controller
         return response()->json([
             'message' => 'User deleted.',
         ]);
+    }
+
+    /**
+     * Update a user
+     */
+    public function update(Request $request, int $id): JsonResponse
+    {
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'User not found.',
+            ], 404);
+        }
+
+        $validated = $request->validate([
+            'name' => ['sometimes', 'string', 'max:255'],
+            'email' => [
+                'sometimes',
+                'string',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email')->ignore($id),
+            ],
+            'corporation_id' => ['sometimes', 'nullable', 'exists:corporations,id'],
+        ]);
+
+        $user->update($validated);
+
+        return response()->json([
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'corporation_id' => $user->corporation_id,
+            'corporation_name' => $user->corporation?->name ?? null,
+            'message' => 'User updated.',
+        ]);
+    }
+
+    /**
+     * Get corporations list for dropdown
+     */
+    public function corporations(Request $request): JsonResponse
+    {
+        $corporations = \App\Models\Corporation::orderBy('name')->get([
+            'id',
+            'uuid',
+            'name',
+        ]);
+
+        return response()->json($corporations);
     }
 }

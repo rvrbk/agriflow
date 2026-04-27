@@ -76,6 +76,9 @@
                     <RouterLink to="/sales-history" class="mt-1.5 block w-full rounded-lg bg-[#d6e9d6] px-2.5 py-2 text-left text-[#1e3020] hover:bg-[#c8e0c9]">
                         {{ t('menu.sales_history') }}
                     </RouterLink>
+                    <RouterLink to="/fiscal-years" class="mt-1.5 block w-full rounded-lg bg-[#d6e9d6] px-2.5 py-2 text-left text-[#1e3020] hover:bg-[#c8e0c9]">
+                        {{ t('menu.fiscal_years') }}
+                    </RouterLink>
                 </div>
 
                 <div class="rounded-xl border border-[#dde5d7] bg-[linear-gradient(180deg,_#fcfff8_0%,_#f4f8ed_100%)] p-3.5">

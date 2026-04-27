@@ -37,33 +37,43 @@ function getExchangeRate(fromCode, toCode) {
 }
 
 // Convert amount from sale currency to display currency
+function asNumber(value) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+}
+
 function convertToDisplayCurrency(amount, saleCurrency) {
     if (amount === null || amount === undefined) return 0;
+    const numericAmount = asNumber(amount);
     const rate = getExchangeRate(saleCurrency, displayCurrency.value);
-    return amount * rate;
+    return numericAmount * rate;
 }
 
 // Total revenue in original currencies
 const totalRevenue = computed(() => {
     return sales.value.reduce((sum, sale) => {
-        return sum + (sale.total_value || 0);
+        return sum + asNumber(sale.total_value);
     }, 0);
 });
 
 // Total revenue converted to display currency
 const displayTotalRevenue = computed(() => {
+    // Reference displayCurrency to make this computed reactive to currency changes
+    const _ = displayCurrency.value;
     let total = 0;
     sales.value.forEach(sale => {
-        total += convertToDisplayCurrency(sale.total_value || 0, sale.currency);
+        total += convertToDisplayCurrency(sale.total_value, sale.currency);
     });
     return total;
 });
 
 // Filtered total in display currency
 const filteredDisplayTotal = computed(() => {
+    // Reference displayCurrency to make this computed reactive to currency changes
+    const _ = displayCurrency.value;
     let total = 0;
     filteredSales.value.forEach(sale => {
-        total += convertToDisplayCurrency(sale.total_value || 0, sale.currency);
+        total += convertToDisplayCurrency(sale.total_value, sale.currency);
     });
     return total;
 });
@@ -76,7 +86,7 @@ const summaryByCurrency = computed(() => {
         if (!summary[currency]) {
             summary[currency] = { total: 0, count: 0 };
         }
-        summary[currency].total += sale.total_value || 0;
+        summary[currency].total += asNumber(sale.total_value);
         summary[currency].count += 1;
     });
     return summary;
@@ -100,15 +110,13 @@ const filteredSales = computed(() => {
 });
 
 function formatCurrency(amount, currency = 'USD') {
-    if (amount === null || amount === undefined) {
-        return '';
-    }
+    const numericAmount = asNumber(amount);
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: currency,
         minimumFractionDigits: 0,
         maximumFractionDigits: 2,
-    }).format(amount);
+    }).format(numericAmount);
 }
 
 function getCurrencySymbol(currency) {
@@ -159,14 +167,20 @@ async function loadSales() {
             displayCurrency.value = currencies.value[0]?.code || 'USD';
         }
         
-        sales.value = Array.isArray(salesResponse.data) ? salesResponse.data.map((sale) => ({
-            ...sale,
-            formatted_date: formatDate(sale.created_at),
-            formatted_price: formatCurrency(sale.unit_price, sale.currency),
-            formatted_total: formatCurrency(sale.total_value, sale.currency),
-            formatted_price_display: formatDisplayCurrency(sale.unit_price, sale.currency),
-            formatted_total_display: formatDisplayCurrency(sale.total_value, sale.currency),
-        })) : [];
+        sales.value = Array.isArray(salesResponse.data) ? salesResponse.data.map((sale) => {
+            const numericTotal = asNumber(sale.total_value);
+            const numericPrice = asNumber(sale.unit_price);
+            return {
+                ...sale,
+                unit_price: numericPrice,
+                total_value: numericTotal,
+                formatted_date: formatDate(sale.created_at),
+                formatted_price: formatCurrency(numericPrice, sale.currency),
+                formatted_total: formatCurrency(numericTotal, sale.currency),
+                formatted_price_display: formatDisplayCurrency(numericPrice, sale.currency),
+                formatted_total_display: formatDisplayCurrency(numericTotal, sale.currency),
+            };
+        }) : [];
     } catch {
         loadError.value = t('sales_history.messages.load_error');
     } finally {
@@ -208,7 +222,6 @@ void loadSales();
                     <select
                         v-model="displayCurrency"
                         class="rounded-lg border border-[#ccd8c7] bg-white px-3 py-1 text-sm"
-                        @change="loadSales"
                     >
                         <option v-for="currency in currencies" :key="currency.code" :value="currency.code">
                             {{ currency.code }} - {{ currency.name }}
@@ -256,13 +269,12 @@ void loadSales();
                     </p>
                 </div>
                 <div v-if="sale.currency !== displayCurrency" class="mt-2 text-xs text-[#6b826b]">
-                    ≈ {{ sale.formatted_total_display }} {{ displayCurrency }}
+                    ≈ {{ formatDisplayCurrency(sale.total_value, sale.currency) }} {{ displayCurrency }}
                 </div>
                 <div class="mt-3 flex gap-2">
                     <RouterLink
                         :to="`/receipt/${sale.uuid}`"
                         class="inline-flex items-center gap-1.5 rounded-lg bg-[#2f6e4a] px-3 py-1.5 text-sm font-medium text-white hover:bg-[#275d3f]"
-                        target="_blank"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />

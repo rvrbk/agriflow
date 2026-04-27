@@ -12,6 +12,8 @@ const searchTerm = ref('');
 const addFormOpen = ref(false);
 const savingAdd = ref(false);
 const addError = ref('');
+const corporations = ref([]);
+const hasCorporation = ref(false);
 
 const editStates = reactive({});
 const editForms = reactive({});
@@ -22,6 +24,7 @@ const deleteSaving = reactive({});
 const newUser = reactive({
     name: '',
     email: '',
+    corporation_id: null,
 });
 
 const filteredUsers = computed(() => {
@@ -44,6 +47,8 @@ function normalizeApiUser(user) {
         id: Number(user.id),
         name: user.name ?? '',
         email: user.email ?? '',
+        corporation_id: user.corporation_id ?? null,
+        corporation_name: user.corporation_name ?? null,
         is_current_user: Boolean(user.is_current_user),
     };
 }
@@ -51,24 +56,40 @@ function normalizeApiUser(user) {
 function resetNewForm() {
     newUser.name = '';
     newUser.email = '';
+    // Auto-assign to single corporation
+    if (corporations.value.length === 1) {
+        newUser.corporation_id = corporations.value[0].id;
+    } else {
+        newUser.corporation_id = null;
+    }
 }
 
 function initEditForm(user) {
     editForms[user.id] = {
         name: user.name ?? '',
         email: user.email ?? '',
+        corporation_id: user.corporation_id ?? null,
     };
 }
+
+
 
 async function loadUsers() {
     loading.value = true;
     loadError.value = '';
 
     try {
-        const response = await http.get('/api/users');
-        users.value = Array.isArray(response.data)
-            ? response.data.map(normalizeApiUser)
+        const [usersResponse, corpsResponse] = await Promise.all([
+            http.get('/api/users'),
+            http.get('/api/users/corporations'),
+        ]);
+
+        users.value = Array.isArray(usersResponse.data)
+            ? usersResponse.data.map(normalizeApiUser)
             : [];
+
+        corporations.value = Array.isArray(corpsResponse.data) ? corpsResponse.data : [];
+        hasCorporation.value = corporations.value.length > 0;
 
         users.value.forEach((user) => {
             initEditForm(user);
@@ -76,6 +97,11 @@ async function loadUsers() {
                 editStates[user.id] = false;
             }
         });
+
+        // Auto-assign to the single corporation
+        if (corporations.value.length === 1) {
+            newUser.corporation_id = corporations.value[0].id;
+        }
     } catch (error) {
         loadError.value = t('users.messages.load_error');
     } finally {
@@ -87,10 +113,18 @@ async function addUser() {
     addError.value = '';
     savingAdd.value = true;
 
+    // Check if there's a corporation to assign
+    if (!hasCorporation.value) {
+        addError.value = t('users.messages.no_corporation_warning');
+        savingAdd.value = false;
+        return;
+    }
+
     try {
         await http.post('/api/users', {
             name: newUser.name,
             email: newUser.email,
+            corporation_id: newUser.corporation_id,
         });
 
         resetNewForm();
@@ -130,10 +164,10 @@ async function saveEdit(user) {
     editSaving[user.id] = true;
 
     try {
-        await http.post('/api/users', {
-            id: user.id,
+        await http.put(`/api/users/${user.id}`, {
             name: form.name,
             email: form.email,
+            corporation_id: form.corporation_id,
         });
 
         editStates[user.id] = false;
@@ -222,6 +256,11 @@ void loadUsers();
                         class="w-full rounded-lg border border-[#ccd8c7] bg-white px-3 py-2"
                     >
                 </label>
+
+                <!-- Warning if no corporation exists -->
+                <div v-if="!hasCorporation" class="md:col-span-2 text-sm text-red-600">
+                    {{ t('users.messages.create_corporation_first') }}
+                </div>
             </div>
 
             <div class="mt-3 flex items-center gap-3">
@@ -314,6 +353,11 @@ void loadUsers();
                                 class="w-full rounded-lg border border-[#ccd8c7] bg-white px-3 py-2"
                             >
                         </label>
+
+                        <!-- Warning if no corporation exists -->
+                        <div v-if="!hasCorporation" class="block md:col-span-2 text-sm text-red-600">
+                            {{ t('users.messages.create_corporation_first') }}
+                        </div>
                     </div>
 
                     <div class="mt-3 flex items-center gap-2">

@@ -20,4 +20,10 @@
     body {
         background: white;
     }
+    
+    .receipt-container {
+        box-shadow: none;
+        background: white;
+        padding: 0;
+    }
 }

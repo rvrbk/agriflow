@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Corporation;
 use App\Models\User;
 use App\Notifications\WelcomeSetPasswordNotification;
 use Illuminate\Auth\Passwords\PasswordBroker;
@@ -36,6 +37,15 @@ class UserService
 
         $user->name = $data['name'];
         $user->email = $data['email'];
+        if (isset($data['corporation_id'])) {
+            $user->corporation_id = $data['corporation_id'];
+        } elseif ($isNew) {
+            // Auto-assign to first corporation when creating new user
+            $firstCorporation = Corporation::query()->first();
+            if ($firstCorporation) {
+                $user->corporation_id = $firstCorporation->id;
+            }
+        }
         $user->save();
 
         if ($isNew) {
