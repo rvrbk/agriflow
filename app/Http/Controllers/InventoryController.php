@@ -11,15 +11,26 @@ use Illuminate\Http\Request;
 class InventoryController extends Controller
 {
     /**
+     * @return int|null
+     */
+    private function currentTenantId(): ?int
+    {
+        return \App\Models\Corporation::current()?->id;
+    }
+
+    /**
      * @return JsonResponse
      */
     public function list(): JsonResponse
     {
+        $tenantId = $this->currentTenantId();
+
         $inventoryRows = Inventory::query()
             ->join('products', 'inventories.product_id', '=', 'products.id')
             ->leftJoin('batches', 'inventories.batch_id', '=', 'batches.id')
             ->leftJoin('warehouses', 'inventories.warehouse_id', '=', 'warehouses.id')
-            ->orderByRaw("products.name->>'en'")
+            ->when($tenantId, fn ($query) => $query->where('inventories.corporation_id', $tenantId))
+            ->orderByRaw("products.name->>'$.en'")
             ->orderBy('batches.harvested_on', 'desc')
             ->select([
                 'inventories.id',
@@ -58,56 +69,6 @@ class InventoryController extends Controller
     }
 
     /**
-     * @param Request $request
-     * @return JsonResponse
-     */
-    public function adjust(Request $request): JsonResponse
-    {
-        $validated = $request->validate([
-            'batch_uuid' => ['required', 'string'],
-            'amount' => ['required', 'numeric', 'gt:0'],
-            'direction' => ['required', 'in:add,subtract'],
-        ]);
-
-        $batch = Batch::where('uuid', $validated['batch_uuid'])->first();
-
-        if (!$batch) {
-            return response()->json([
-                'message' => 'Batch not found.',
-            ], 404);
-        }
-
-        $inventory = Inventory::where('batch_id', $batch->id)->first();
-
-        if (!$inventory) {
-            return response()->json([
-                'message' => 'Inventory not found.',
-            ], 404);
-        }
-
-        $amount = (float) $validated['amount'];
-
-        if ($validated['direction'] === 'add') {
-            $inventory->quantity = (float) $inventory->quantity + $amount;
-        } else {
-            if ((float) $inventory->quantity < $amount) {
-                return response()->json([
-                    'message' => 'Insufficient inventory quantity.',
-                ], 422);
-            }
-
-            $inventory->quantity = (float) $inventory->quantity - $amount;
-        }
-
-        $inventory->save();
-
-        return response()->json([
-            'message' => 'Inventory updated.',
-            'quantity' => (float) $inventory->quantity,
-        ]);
-    }
-
-    /**
      * Sell inventory (subtract from stock).
      *
      * @param Request $request
@@ -115,6 +76,8 @@ class InventoryController extends Controller
      */
     public function sell(Request $request): JsonResponse
     {
+        $tenantId = $this->currentTenantId();
+
         $validated = $request->validate([
             'batch_uuid' => ['required', 'string'],
             'amount' => ['required', 'numeric', 'gt:0'],
@@ -123,7 +86,10 @@ class InventoryController extends Controller
             'buyer_name' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $batch = Batch::where('uuid', $validated['batch_uuid'])->first();
+        $batch = Batch::query()
+            ->where('uuid', $validated['batch_uuid'])
+            ->when($tenantId, fn ($query) => $query->where('corporation_id', $tenantId))
+            ->first();
 
         if (!$batch) {
             return response()->json([
@@ -131,7 +97,10 @@ class InventoryController extends Controller
             ], 404);
         }
 
-        $inventory = Inventory::where('batch_id', $batch->id)->first();
+        $inventory = Inventory::query()
+            ->where('batch_id', $batch->id)
+            ->when($tenantId, fn ($query) => $query->where('corporation_id', $tenantId))
+            ->first();
 
         if (!$inventory) {
             return response()->json([
@@ -209,6 +178,7 @@ class InventoryController extends Controller
     {
         $sales = Sale::query()
             ->with(['product', 'batch', 'warehouse'])
+            ->when($this->currentTenantId(), fn ($query, $tenantId) => $query->where('corporation_id', $tenantId))
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($sale) {
@@ -247,6 +217,7 @@ class InventoryController extends Controller
     public function getSale(string $uuid): JsonResponse
     {
         $sale = Sale::with(['product', 'batch', 'warehouse'])
+            ->when($this->currentTenantId(), fn ($query, $tenantId) => $query->where('corporation_id', $tenantId))
             ->where('uuid', $uuid)
             ->first();
 

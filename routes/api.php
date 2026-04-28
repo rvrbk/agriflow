@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\CurrencyController;
-use App\Http\Controllers\FiscalYearController;
 use App\Http\Controllers\HarvestController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ProductController;
@@ -20,7 +19,11 @@ Route::get('translations/{locale}', [TranslationController::class, 'show'])
 
 Route::get('harvest/public/{batchUuid}', [HarvestController::class, 'publicShow'])->name('harvest.public.show');
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'needsTenant'])->get('user', function (Request $request) {
+    return $request->user();
+})->name('user.current');
+
+Route::middleware(['auth:sanctum', 'needsTenant'])->group(function () {
     Route::get('product', [ProductController::class, 'list'])->name('product.list');
     Route::post('product', [ProductController::class, 'post'])->name('product.post');
     Route::delete('product/{uuid}', [ProductController::class, 'delete'])->name('product.delete');
@@ -36,7 +39,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('harvest', [HarvestController::class, 'post'])->name('harvest.post');
     Route::delete('harvest/{uuid}', [HarvestController::class, 'delete'])->name('harvest.delete');
     Route::get('inventory', [InventoryController::class, 'list'])->name('inventory.list');
-    Route::post('inventory/adjust', [InventoryController::class, 'adjust'])->name('inventory.adjust');
     Route::post('inventory/sell', [InventoryController::class, 'sell'])->name('inventory.sell');
     Route::get('sales', [InventoryController::class, 'salesHistory'])->name('sales.history');
     Route::get('sales/{uuid}', [InventoryController::class, 'getSale'])->name('sales.get');
@@ -49,12 +51,4 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('users/{id}', [UserController::class, 'update'])->name('users.update');
     Route::delete('users/{id}', [UserController::class, 'delete'])->name('users.delete');
     Route::get('users/corporations', [UserController::class, 'corporations'])->name('users.corporations');
-
-    // Fiscal Year Management
-    Route::get('fiscal-years', [FiscalYearController::class, 'index'])->name('fiscal-years.index');
-    Route::post('fiscal-years', [FiscalYearController::class, 'store'])->name('fiscal-years.store');
-    Route::get('fiscal-years/current', [FiscalYearController::class, 'current'])->name('fiscal-years.current');
-    Route::post('fiscal-years/{uuid}/close', [FiscalYearController::class, 'close'])->name('fiscal-years.close');
-    Route::get('fiscal-years/{uuid}/report', [FiscalYearController::class, 'report'])->name('fiscal-years.report');
-    Route::get('fiscal-years/{uuid}/sales', [FiscalYearController::class, 'sales'])->name('fiscal-years.sales');
 });

@@ -11,6 +11,14 @@ use Illuminate\Http\Request;
 class HarvestController extends Controller
 {
     /**
+     * @return int|null
+     */
+    private function currentTenantId(): ?int
+    {
+        return \App\Models\Corporation::current()?->id;
+    }
+
+    /**
      * @return JsonResponse
      */
     public function list(): JsonResponse
@@ -80,11 +88,14 @@ class HarvestController extends Controller
      */
     private function baseHarvestQuery()
     {
+        $tenantId = $this->currentTenantId();
+
         return Inventory::query()
             ->join('batches', 'inventories.batch_id', '=', 'batches.id')
             ->join('products', 'inventories.product_id', '=', 'products.id')
             ->join('warehouses', 'inventories.warehouse_id', '=', 'warehouses.id')
             ->leftJoin('corporations', 'batches.corporation_id', '=', 'corporations.id')
+            ->when($tenantId, fn ($query) => $query->where('batches.corporation_id', $tenantId))
             ->select([
                 'batches.uuid as batch_uuid',
                 'batches.harvested_on',

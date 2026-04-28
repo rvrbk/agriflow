@@ -18,6 +18,8 @@ class HarvestService
      */
     public function store(array $data): void
     {
+        $currentTenant = Corporation::current();
+
         foreach ($data as $row) {
             if (!is_array($row)) {
                 continue;
@@ -47,7 +49,8 @@ class HarvestService
                 $isNewBatch = true;
             }
 
-            $corporation = $this->resolveModelByUuid(Corporation::class, $row['corporation_uuid'] ?? null);
+            $corporation = $currentTenant
+                ?? $this->resolveModelByUuid(Corporation::class, $row['corporation_uuid'] ?? null);
 
             if (!$corporation && $isNewBatch) {
                 continue;
@@ -85,6 +88,7 @@ class HarvestService
 
             $inventory->product_id = $product->id;
             $inventory->warehouse_id = $warehouse->id;
+            $inventory->corporation_id = $batch->corporation_id;
 
             if (array_key_exists('available_on', $row)) {
                 $inventory->available_on = $row['available_on'];
@@ -115,7 +119,7 @@ class HarvestService
      */
     public function deleteByBatchUuid(string $batchUuid): bool
     {
-        $batch = Batch::where('uuid', $batchUuid)->first();
+        $batch = Batch::query()->where('uuid', $batchUuid)->first();
 
         if (!$batch) {
             return false;

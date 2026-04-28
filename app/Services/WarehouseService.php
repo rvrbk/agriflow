@@ -19,6 +19,8 @@ class WarehouseService
      */
     public function store(array $data): void
     {
+        $currentTenant = Corporation::current();
+
         foreach ($data as $row) {
             $warehouse = null;
 
@@ -32,7 +34,11 @@ class WarehouseService
                 $warehouse->uuid = Str::uuid();
             }
 
-            if (isset($row['corporation_uuid'])) {
+            if ($currentTenant) {
+                $warehouse->corporation_id = $currentTenant->id;
+            }
+
+            if (! $currentTenant && isset($row['corporation_uuid'])) {
                 $corporation = Corporation::where('uuid', $row['corporation_uuid'])->first();
 
                 if ($corporation) {
@@ -58,7 +64,7 @@ class WarehouseService
      */
     public function deleteByUuid(string $uuid): string
     {
-        $warehouse = Warehouse::where('uuid', $uuid)->first();
+        $warehouse = Warehouse::query()->where('uuid', $uuid)->first();
 
         if (!$warehouse) {
             return self::DELETE_NOT_FOUND;

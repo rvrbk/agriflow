@@ -2,20 +2,21 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToCurrentTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Sale extends Model
 {
-    use HasFactory, SoftDeletes;
+    use BelongsToCurrentTenant, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'uuid',
+        'corporation_id',
         'batch_id',
         'product_id',
         'warehouse_id',
-        'fiscal_year_id',
         'quantity',
         'unit_price',
         'total_value',
@@ -37,37 +38,6 @@ class Sale extends Model
 
         static::creating(function ($model) {
             $model->uuid = (string) \Illuminate\Support\Str::uuid();
-
-            // Auto-assign fiscal year based on batch's corporation
-            if (!$model->fiscal_year_id && $model->batch_id) {
-                $batch = Batch::find($model->batch_id);
-                if ($batch && $batch->corporation_id) {
-                    $activeFiscalYear = FiscalYear::getActiveForCorporation($batch->corporation_id);
-                    if ($activeFiscalYear) {
-                        $model->fiscal_year_id = $activeFiscalYear->id;
-                    }
-                }
-            }
-        });
-
-        // Update fiscal year totals when sale is created/updated
-        static::saved(function ($sale) {
-            if ($sale->fiscal_year_id) {
-                $fiscalYear = FiscalYear::find($sale->fiscal_year_id);
-                if ($fiscalYear) {
-                    $fiscalYear->updateTotals();
-                }
-            }
-        });
-
-        // Update fiscal year totals when sale is deleted
-        static::deleted(function ($sale) {
-            if ($sale->fiscal_year_id) {
-                $fiscalYear = FiscalYear::find($sale->fiscal_year_id);
-                if ($fiscalYear) {
-                    $fiscalYear->updateTotals();
-                }
-            }
         });
     }
 
@@ -86,8 +56,4 @@ class Sale extends Model
         return $this->belongsTo(Warehouse::class);
     }
 
-    public function fiscalYear()
-    {
-        return $this->belongsTo(FiscalYear::class);
-    }
 }

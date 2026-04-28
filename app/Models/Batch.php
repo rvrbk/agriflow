@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToCurrentTenant;
 use Illuminate\Database\Eloquent\Model;
 
 class Batch extends Model
 {
+    use BelongsToCurrentTenant;
+
     /**
      * @var array<int, string>
      */

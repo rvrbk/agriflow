@@ -85,6 +85,12 @@ async function submit() {
                     {{ t('login.fields.remember_me') }}
                 </label>
 
+                <div class="text-right">
+                    <RouterLink to="/forgot-password" class="text-sm font-medium text-[#2f6e4a] hover:text-[#275d3f]">
+                        {{ t('login.actions.forgot_password') }}
+                    </RouterLink>
+                </div>
+
                 <p v-if="errorMessage" class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{{ errorMessage }}</p>
 
                 <button

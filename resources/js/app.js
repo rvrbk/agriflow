@@ -8,7 +8,22 @@ import App from './App.vue';
 import { i18n, initializeLocale } from './i18n';
 import { initializeOfflineQueue } from './services/offlineQueue';
 
-registerSW({ immediate: true });
+const isLocalHost = window.location.hostname === 'localhost'
+	|| window.location.hostname === '127.0.0.1'
+	|| window.location.hostname.endsWith('.test');
+
+if (isLocalHost) {
+	if ('serviceWorker' in navigator) {
+		void navigator.serviceWorker.getRegistrations().then((registrations) => {
+			registrations.forEach((registration) => {
+				void registration.unregister();
+			});
+		});
+	}
+} else {
+	registerSW({ immediate: true });
+}
+
 initializeOfflineQueue();
 
 const app = createApp(App);

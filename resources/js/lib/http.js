@@ -1,6 +1,8 @@
 import axios from 'axios';
 import { queueRequestFromConfig } from '../services/offlineQueue';
 
+let authRedirectInProgress = false;
+
 axios.defaults.baseURL = window.location.origin;
 axios.defaults.withCredentials = true;
 axios.defaults.withXSRFToken = true;
@@ -35,11 +37,16 @@ axios.interceptors.response.use(
 		const status = error?.response?.status;
 
 		if (status === 401 || status === 419) {
-			const isLoginRoute = window.location.pathname === '/login';
+			const pathname = window.location.pathname;
+			const isGuestRoute = pathname === '/login' || pathname === '/set-password' || pathname === '/forgot-password';
+			const requestUrl = String(error?.config?.url ?? '');
+			const isCurrentUserProbe = requestUrl.includes('/api/user');
 
-			if (!isLoginRoute) {
+			// Let the router/auth store handle the bootstrap user probe to avoid hard-refresh loops.
+			if (!isGuestRoute && !isCurrentUserProbe && !authRedirectInProgress) {
+				authRedirectInProgress = true;
 				const redirect = encodeURIComponent(window.location.pathname + window.location.search);
-				window.location.assign(`/login?redirect=${redirect}`);
+				window.location.replace(`/login?redirect=${redirect}`);
 			}
 		}
 

@@ -10,10 +10,10 @@ import HarvestPublicView from '../views/HarvestPublicView.vue';
 import LoginView from '../views/LoginView.vue';
 import UsersView from '../views/UsersView.vue';
 import SetPasswordView from '../views/SetPasswordView.vue';
+import ForgotPasswordView from '../views/ForgotPasswordView.vue';
 import SellInventoryView from '../views/SellInventoryView.vue';
 import SalesHistoryView from '../views/SalesHistoryView.vue';
 import ReceiptView from '../views/ReceiptView.vue';
-import FiscalYearsView from '../views/FiscalYearsView.vue';
 
 const routes = [
     {
@@ -71,12 +71,6 @@ const routes = [
         meta: { requiresAuth: true },
     },
     {
-        path: '/fiscal-years',
-        name: 'fiscal-years',
-        component: FiscalYearsView,
-        meta: { requiresAuth: true },
-    },
-    {
         path: '/receipt/:uuid',
         name: 'receipt',
         component: ReceiptView,
@@ -99,6 +93,12 @@ const routes = [
         component: SetPasswordView,
         meta: { guestOnly: true },
     },
+    {
+        path: '/forgot-password',
+        name: 'forgot-password',
+        component: ForgotPasswordView,
+        meta: { guestOnly: true },
+    },
 ];
 
 const router = createRouter({
@@ -118,6 +118,14 @@ router.beforeEach(async (to) => {
             name: 'login',
             query: { redirect: to.fullPath },
         };
+    }
+
+    const isSetPasswordRoute = to.name === 'set-password';
+    const hasResetToken = typeof to.query.token === 'string' && to.query.token.length > 0;
+    const hasResetEmail = typeof to.query.email === 'string' && to.query.email.length > 0;
+
+    if (isSetPasswordRoute && hasResetToken && hasResetEmail) {
+        return true;
     }
 
     if (to.meta.guestOnly && isAuthenticated) {

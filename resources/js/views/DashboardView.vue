@@ -13,7 +13,6 @@ const warehouseCards = ref([]);
 const salesSummary = ref(null);
 const currencies = ref([]);
 const displayCurrency = ref('UGX');
-const currentFiscalYear = ref(null);
 
 function asNumber(value) {
     const parsed = Number(value);
@@ -80,58 +79,24 @@ const filteredCards = computed(() => {
     });
 });
 
-// Create a default fiscal year if none exists
-async function createDefaultFiscalYear() {
-    const today = new Date();
-    const year = today.getFullYear();
-    const startDate = `${year}-01-01`;
-    const endDate = `${year}-12-31`;
-    
-    try {
-        await http.post('/api/fiscal-years', {
-            name: `FY ${year}`,
-            start_date: startDate,
-            end_date: endDate,
-        });
-    } catch (error) {
-        console.error('Failed to create default fiscal year:', error);
-    }
-}
-
 async function loadDashboardOverview() {
     loading.value = true;
     loadError.value = '';
 
     try {
-        const [warehousesResponse, inventoryResponse, currenciesResponse] = await Promise.all([
+        const [warehousesResponse, inventoryResponse, currenciesResponse, salesResponse] = await Promise.all([
             http.get('/api/warehouse'),
             http.get('/api/inventory'),
             http.get('/api/currencies'),
+            http.get('/api/sales'),
         ]);
 
         // Load currencies for exchange rate calculations
         currencies.value = currenciesResponse.data || [];
 
-        // Load current fiscal year
-        const fyResponse = await http.get('/api/fiscal-years/current');
-        currentFiscalYear.value = fyResponse.data || null;
+        const salesData = Array.isArray(salesResponse.data) ? salesResponse.data : [];
 
-        // If no fiscal year exists, create one for the current year
-        if (!currentFiscalYear.value) {
-            await createDefaultFiscalYear();
-            // Reload fiscal year after creation
-            const newFyResponse = await http.get('/api/fiscal-years/current');
-            currentFiscalYear.value = newFyResponse.data || null;
-        }
-
-        // Load sales for the current fiscal year
-        let salesData = [];
-        if (currentFiscalYear.value) {
-            const salesResponse = await http.get(`/api/fiscal-years/${currentFiscalYear.value.uuid}/sales`);
-            salesData = Array.isArray(salesResponse.data) ? salesResponse.data : [];
-        }
-
-        // Calculate sales summary for current fiscal year only
+        // Calculate sales summary from all available sales.
         if (salesData.length > 0) {
             salesSummary.value = {
                 totalSales: salesData.length,
@@ -253,14 +218,9 @@ void loadDashboardOverview();
             </RouterLink>
         </div>
 
-        <!-- Current Fiscal Year & Revenue Summary -->
-        <div v-if="!loading && currentFiscalYear" class="mb-6 rounded-lg border border-[#ccd8c7] bg-[#f7f9f7] p-4">
+        <div v-if="!loading && salesSummary" class="mb-6 rounded-lg border border-[#ccd8c7] bg-[#f7f9f7] p-4">
             <div class="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                    <p v-if="currentFiscalYear" class="text-xs font-medium text-[#4e5f4f] uppercase tracking-wider">
-                        {{ t('dashboard.fiscal_year.label') }}: {{ currentFiscalYear.name }}
-                        ({{ formatDate(currentFiscalYear.start_date) }} → {{ formatDate(currentFiscalYear.end_date) }})
-                    </p>
                     <p class="text-sm font-medium text-[#4e5f4f] mt-1">{{ t('dashboard.revenue.title') }}</p>
                     <p class="text-2xl font-bold text-[#2a4d2a]">
                         {{ formatCurrency(salesSummary.totalRevenueUSD * getExchangeRate('USD', displayCurrency), displayCurrency) }}

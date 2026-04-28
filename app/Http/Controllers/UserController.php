@@ -96,7 +96,7 @@ class UserController extends Controller
      */
     public function update(Request $request, int $id): JsonResponse
     {
-        $user = User::find($id);
+        $user = User::query()->find($id);
 
         if (!$user) {
             return response()->json([
@@ -113,7 +113,7 @@ class UserController extends Controller
                 'max:255',
                 Rule::unique('users', 'email')->ignore($id),
             ],
-            'corporation_id' => ['sometimes', 'nullable', 'exists:corporations,id'],
+            'corporation_id' => ['prohibited'],
         ]);
 
         $user->update($validated);
@@ -133,7 +133,12 @@ class UserController extends Controller
      */
     public function corporations(Request $request): JsonResponse
     {
-        $corporations = \App\Models\Corporation::orderBy('name')->get([
+        $currentTenant = \App\Models\Corporation::current();
+
+        $corporations = \App\Models\Corporation::query()
+            ->when($currentTenant, fn ($query) => $query->whereKey($currentTenant->id))
+            ->orderBy('name')
+            ->get([
             'id',
             'uuid',
             'name',

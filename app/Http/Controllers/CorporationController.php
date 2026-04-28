@@ -14,7 +14,10 @@ class CorporationController extends Controller
      */
     public function list(): JsonResponse
     {
+        $currentTenant = Corporation::current();
+
         $corporations = Corporation::query()
+            ->when($currentTenant, fn ($query) => $query->whereKey($currentTenant->id))
             ->orderBy('name')
             ->get(['uuid', 'name'])
             ->values();
@@ -27,7 +30,12 @@ class CorporationController extends Controller
      */
     public function get(): JsonResponse
     {
-        $corporation = Corporation::query()->latest('id')->first();
+        $currentTenant = Corporation::current();
+
+        $corporation = Corporation::query()
+            ->when($currentTenant, fn ($query) => $query->whereKey($currentTenant->id))
+            ->latest('id')
+            ->first();
 
         return response()->json($corporation);
     }

@@ -1,25 +1,25 @@
 <template>
     <div class="min-h-screen bg-[radial-gradient(circle_at_top_right,_#eef5e2_0%,_#f6f6ef_42%)] text-[#1f2a1d]">
-        <header class="no-print sticky top-0 z-40 flex h-[68px] items-center justify-between gap-4 border-b border-[#d8d8c9] bg-[#fffdf5]/95 px-5 backdrop-blur-[6px]">
-            <div class="flex items-center gap-3">
+        <header class="no-print sticky top-0 z-40 flex h-[68px] items-center justify-between gap-2 border-b border-[#d8d8c9] bg-[#fffdf5]/95 px-3 backdrop-blur-[6px] sm:gap-4 sm:px-5">
+            <div class="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
                 <div
-                    class="grid h-[42px] w-[42px] place-items-center rounded-[11px] bg-[linear-gradient(140deg,_#214f34,_#317f4f)] text-sm font-extrabold tracking-[0.04em] text-[#f8fff8] shadow-[0_8px_16px_rgb(42_91_57_/_24%)]"
+                    class="grid h-[42px] w-[42px] shrink-0 place-items-center rounded-[11px] bg-[linear-gradient(140deg,_#214f34,_#317f4f)] text-sm font-extrabold tracking-[0.04em] text-[#f8fff8] shadow-[0_8px_16px_rgb(42_91_57_/_24%)]"
                     aria-hidden="true"
                 >
                     AF
                 </div>
-                <div>
-                    <p class="m-0 text-base font-bold tracking-[0.02em]">AgriFlow</p>
-                    <p class="m-0 text-xs uppercase tracking-[0.09em] text-[#5d684f]">{{ t('header.subtitle') }}</p>
+                <div class="min-w-0">
+                    <p class="m-0 truncate text-sm font-bold tracking-[0.02em] sm:text-base">AgriFlow</p>
+                    <p class="m-0 hidden text-xs uppercase tracking-[0.09em] text-[#5d684f] sm:block">{{ t('header.subtitle') }}</p>
                 </div>
             </div>
 
-            <div class="flex items-center gap-2">
+            <div class="flex shrink-0 items-center gap-1 sm:gap-2">
                 <label class="sr-only" for="locale-selector">{{ t('language') }}</label>
                 <select
                     id="locale-selector"
                     v-model="selectedLocale"
-                    class="h-[38px] rounded-lg border border-[#bed8bf] bg-[#f8fdf6] px-2 text-sm"
+                    class="h-[38px] w-[94px] rounded-lg border border-[#bed8bf] bg-[#f8fdf6] px-2 text-sm sm:w-auto"
                     @change="changeLocale"
                 >
                     <option v-for="option in languageOptions" :key="option.code" :value="option.code">
@@ -30,7 +30,7 @@
                 <button
                     v-if="showMenu"
                     type="button"
-                    class="inline-flex h-[38px] w-[38px] cursor-pointer flex-col justify-center gap-1 rounded-lg border border-[#bed8bf] bg-[#f8fdf6]"
+                    class="inline-flex h-[38px] w-[38px] shrink-0 cursor-pointer flex-col justify-center gap-1 rounded-lg border border-[#bed8bf] bg-[#f8fdf6]"
                     :aria-expanded="isMenuOpen"
                     :aria-label="t('header.toggle_menu')"
                     @click="toggleMenu"
@@ -43,13 +43,13 @@
                 <button
                     v-if="auth.state.user"
                     type="button"
-                    class="inline-flex h-[38px] items-center gap-1.5 rounded-lg bg-[#d97706] px-3 py-2 text-sm font-medium text-white hover:bg-[#b45309]"
+                    class="inline-flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-lg bg-[#d97706] px-0 py-2 text-sm font-medium text-white hover:bg-[#b45309] sm:h-[38px] sm:w-auto sm:gap-1.5 sm:px-3"
                     @click="handleLogout"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                     </svg>
-                    {{ t('header.logout') }}
+                    <span class="hidden sm:inline">{{ t('header.logout') }}</span>
                 </button>
             </div>
         </header>
@@ -75,9 +75,6 @@
                     </RouterLink>
                     <RouterLink to="/sales-history" class="mt-1.5 block w-full rounded-lg bg-[#d6e9d6] px-2.5 py-2 text-left text-[#1e3020] hover:bg-[#c8e0c9]">
                         {{ t('menu.sales_history') }}
-                    </RouterLink>
-                    <RouterLink to="/fiscal-years" class="mt-1.5 block w-full rounded-lg bg-[#d6e9d6] px-2.5 py-2 text-left text-[#1e3020] hover:bg-[#c8e0c9]">
-                        {{ t('menu.fiscal_years') }}
                     </RouterLink>
                 </div>
 
@@ -123,7 +120,10 @@ const supportedLocales = getSupportedLocales();
 const selectedLocale = ref(locale.value);
 
 const showMenu = computed(() => {
-    return auth.state.user && router.currentRoute.value.name !== 'login' && router.currentRoute.value.name !== 'set-password';
+    return auth.state.user
+        && router.currentRoute.value.name !== 'login'
+        && router.currentRoute.value.name !== 'set-password'
+        && router.currentRoute.value.name !== 'forgot-password';
 });
 
 const languageOptions = computed(() => {
