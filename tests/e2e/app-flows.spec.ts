@@ -69,6 +69,15 @@ async function callApi(page: Parameters<Parameters<typeof test>[1]>[0]['page'], 
   }, { path, method, body });
 }
 
+async function cleanupDelete(page: Parameters<Parameters<typeof test>[1]>[0]['page'], path: string) {
+  const response = await callApi(page, path, 'DELETE');
+
+  // Ignore resources already absent, but keep other failures visible in test output.
+  if (![200, 404].includes(response.status)) {
+    throw new Error(`Cleanup failed for ${path} with status ${response.status}`);
+  }
+}
+
 test.describe('Guest flows', () => {
   test('login and forgot-password pages are accessible', async ({ page }) => {
     await page.goto('/login');
@@ -137,38 +146,45 @@ test.describe('Authenticated core navigation', () => {
     const buyerUsd = `Buyer USD ${runId}`;
     const buyerUgx = `Buyer UGX ${runId}`;
 
-    const beforeSalesResponse = await callApi(page, '/api/sales');
-    expect(beforeSalesResponse.status).toBe(200);
-    const beforeSales = (Array.isArray(beforeSalesResponse.data) ? beforeSalesResponse.data : []) as Array<{ currency?: string; total_value?: number | string | null }>;
-    const baselineTotals = sumRevenueByCurrency(beforeSales);
+    let createdProductUuid: string | null = null;
+    let createdWarehouseUuid: string | null = null;
+    let createdBatchUuid: string | null = null;
 
-    const createProductResponse = await callApi(page, '/api/product', 'POST', [{
+    try {
+      const beforeSalesResponse = await callApi(page, '/api/sales');
+      expect(beforeSalesResponse.status).toBe(200);
+      const beforeSales = (Array.isArray(beforeSalesResponse.data) ? beforeSalesResponse.data : []) as Array<{ currency?: string; total_value?: number | string | null }>;
+      const baselineTotals = sumRevenueByCurrency(beforeSales);
+
+      const createProductResponse = await callApi(page, '/api/product', 'POST', [{
         name: productName,
         unit: 'kg',
         properties: [],
       }]);
-    expect(createProductResponse.status).toBe(201);
+      expect(createProductResponse.status).toBe(201);
 
-    const productsResponse = await callApi(page, '/api/product');
-    expect(productsResponse.status).toBe(200);
-    const products = (Array.isArray(productsResponse.data) ? productsResponse.data : []) as Array<{ uuid: string; name: string }>;
-    const createdProduct = products.find((product) => product.name === productName);
-    expect(createdProduct).toBeTruthy();
+      const productsResponse = await callApi(page, '/api/product');
+      expect(productsResponse.status).toBe(200);
+      const products = (Array.isArray(productsResponse.data) ? productsResponse.data : []) as Array<{ uuid: string; name: string }>;
+      const createdProduct = products.find((product) => product.name === productName);
+      expect(createdProduct).toBeTruthy();
+      createdProductUuid = createdProduct!.uuid;
 
-    const createWarehouseResponse = await callApi(page, '/api/warehouse', 'POST', [{
+      const createWarehouseResponse = await callApi(page, '/api/warehouse', 'POST', [{
         name: warehouseName,
         city: 'Kampala',
         country: 'UG',
       }]);
-    expect(createWarehouseResponse.status).toBe(201);
+      expect(createWarehouseResponse.status).toBe(201);
 
-    const warehousesResponse = await callApi(page, '/api/warehouse');
-    expect(warehousesResponse.status).toBe(200);
-    const warehouses = (Array.isArray(warehousesResponse.data) ? warehousesResponse.data : []) as Array<{ uuid: string; name: string }>;
-    const createdWarehouse = warehouses.find((warehouse) => warehouse.name === warehouseName);
-    expect(createdWarehouse).toBeTruthy();
+      const warehousesResponse = await callApi(page, '/api/warehouse');
+      expect(warehousesResponse.status).toBe(200);
+      const warehouses = (Array.isArray(warehousesResponse.data) ? warehousesResponse.data : []) as Array<{ uuid: string; name: string }>;
+      const createdWarehouse = warehouses.find((warehouse) => warehouse.name === warehouseName);
+      expect(createdWarehouse).toBeTruthy();
+      createdWarehouseUuid = createdWarehouse!.uuid;
 
-    const createHarvestResponse = await callApi(page, '/api/harvest', 'POST', [{
+      const createHarvestResponse = await callApi(page, '/api/harvest', 'POST', [{
         product_uuid: createdProduct!.uuid,
         warehouse_uuid: createdWarehouse!.uuid,
         quantity: 80,
@@ -177,67 +193,81 @@ test.describe('Authenticated core navigation', () => {
         quality: 'high',
         replace_quantity: true,
       }]);
-    expect(createHarvestResponse.status).toBe(201);
+      expect(createHarvestResponse.status).toBe(201);
 
-    const harvestsResponse = await callApi(page, '/api/harvest');
-    expect(harvestsResponse.status).toBe(200);
-    const harvests = (Array.isArray(harvestsResponse.data) ? harvestsResponse.data : []) as Array<{ batch_uuid: string; product_uuid: string; warehouse_uuid: string }>;
-    const harvest = harvests.find(
-      (row) => row.product_uuid === createdProduct!.uuid && row.warehouse_uuid === createdWarehouse!.uuid,
-    );
-    expect(harvest).toBeTruthy();
+      const harvestsResponse = await callApi(page, '/api/harvest');
+      expect(harvestsResponse.status).toBe(200);
+      const harvests = (Array.isArray(harvestsResponse.data) ? harvestsResponse.data : []) as Array<{ batch_uuid: string; product_uuid: string; warehouse_uuid: string }>;
+      const harvest = harvests.find(
+        (row) => row.product_uuid === createdProduct!.uuid && row.warehouse_uuid === createdWarehouse!.uuid,
+      );
+      expect(harvest).toBeTruthy();
+      createdBatchUuid = harvest!.batch_uuid;
 
-    const sellUsdResponse = await callApi(page, '/api/inventory/sell', 'POST', {
+      const sellUsdResponse = await callApi(page, '/api/inventory/sell', 'POST', {
         batch_uuid: harvest!.batch_uuid,
         amount: 10,
         price: 5,
         currency: 'USD',
         buyer_name: buyerUsd,
-    });
-    expect(sellUsdResponse.status).toBe(200);
-    const sellUsdData = (sellUsdResponse.data ?? {}) as { sale_uuid?: string; currency?: string; total_value?: number | string | null };
-    expect(sellUsdData.currency).toBe('USD');
-    expect(Number(sellUsdData.total_value ?? 0)).toBe(50);
-    expect(sellUsdData.sale_uuid).toBeTruthy();
+      });
+      expect(sellUsdResponse.status).toBe(200);
+      const sellUsdData = (sellUsdResponse.data ?? {}) as { sale_uuid?: string; currency?: string; total_value?: number | string | null };
+      expect(sellUsdData.currency).toBe('USD');
+      expect(Number(sellUsdData.total_value ?? 0)).toBe(50);
+      expect(sellUsdData.sale_uuid).toBeTruthy();
 
-    const sellUgxResponse = await callApi(page, '/api/inventory/sell', 'POST', {
+      const sellUgxResponse = await callApi(page, '/api/inventory/sell', 'POST', {
         batch_uuid: harvest!.batch_uuid,
         amount: 20,
         price: 1000,
         currency: 'UGX',
         buyer_name: buyerUgx,
-    });
-    expect(sellUgxResponse.status).toBe(200);
-    const sellUgxData = (sellUgxResponse.data ?? {}) as { sale_uuid?: string; currency?: string; total_value?: number | string | null };
-    expect(sellUgxData.currency).toBe('UGX');
-    expect(Number(sellUgxData.total_value ?? 0)).toBe(20000);
-    expect(sellUgxData.sale_uuid).toBeTruthy();
+      });
+      expect(sellUgxResponse.status).toBe(200);
+      const sellUgxData = (sellUgxResponse.data ?? {}) as { sale_uuid?: string; currency?: string; total_value?: number | string | null };
+      expect(sellUgxData.currency).toBe('UGX');
+      expect(Number(sellUgxData.total_value ?? 0)).toBe(20000);
+      expect(sellUgxData.sale_uuid).toBeTruthy();
 
-    const afterSalesResponse = await callApi(page, '/api/sales');
-    expect(afterSalesResponse.status).toBe(200);
-    const afterSales = (Array.isArray(afterSalesResponse.data) ? afterSalesResponse.data : []) as Array<{ uuid?: string; currency?: string; total_value?: number | string | null }>;
+      const afterSalesResponse = await callApi(page, '/api/sales');
+      expect(afterSalesResponse.status).toBe(200);
+      const afterSales = (Array.isArray(afterSalesResponse.data) ? afterSalesResponse.data : []) as Array<{ uuid?: string; currency?: string; total_value?: number | string | null }>;
 
-    const usdSale = afterSales.find((sale) => sale.uuid === sellUsdData.sale_uuid);
-    const ugxSale = afterSales.find((sale) => sale.uuid === sellUgxData.sale_uuid);
-    expect(usdSale?.currency).toBe('USD');
-    expect(Number(usdSale?.total_value ?? 0)).toBe(50);
-    expect(ugxSale?.currency).toBe('UGX');
-    expect(Number(ugxSale?.total_value ?? 0)).toBe(20000);
+      const usdSale = afterSales.find((sale) => sale.uuid === sellUsdData.sale_uuid);
+      const ugxSale = afterSales.find((sale) => sale.uuid === sellUgxData.sale_uuid);
+      expect(usdSale?.currency).toBe('USD');
+      expect(Number(usdSale?.total_value ?? 0)).toBe(50);
+      expect(ugxSale?.currency).toBe('UGX');
+      expect(Number(ugxSale?.total_value ?? 0)).toBe(20000);
 
-    const afterTotals = sumRevenueByCurrency(afterSales);
-    const expectedUsdTotal = (baselineTotals.USD ?? 0) + 50;
-    const expectedUgxTotal = (baselineTotals.UGX ?? 0) + 20000;
+      const afterTotals = sumRevenueByCurrency(afterSales);
+      const expectedUsdTotal = (baselineTotals.USD ?? 0) + 50;
+      const expectedUgxTotal = (baselineTotals.UGX ?? 0) + 20000;
 
-    expect(afterTotals.USD ?? 0).toBe(expectedUsdTotal);
-    expect(afterTotals.UGX ?? 0).toBe(expectedUgxTotal);
+      expect(afterTotals.USD ?? 0).toBe(expectedUsdTotal);
+      expect(afterTotals.UGX ?? 0).toBe(expectedUgxTotal);
 
-    await page.goto('/');
-    await expect(page.getByText(/total revenue|obungibwa bwonna|jumla ya mapato/i)).toBeVisible();
+      await page.goto('/');
+      await expect(page.getByText(/total revenue|obungibwa bwonna|jumla ya mapato/i)).toBeVisible();
 
-    const usdRevenueLine = page.locator('p').filter({ hasText: /^USD:/ }).first();
-    const ugxRevenueLine = page.locator('p').filter({ hasText: /^UGX:/ }).first();
+      const usdRevenueLine = page.locator('p').filter({ hasText: /^USD:/ }).first();
+      const ugxRevenueLine = page.locator('p').filter({ hasText: /^UGX:/ }).first();
 
-    await expect(usdRevenueLine).toContainText(formatCurrency(expectedUsdTotal, 'USD'));
-    await expect(ugxRevenueLine).toContainText(formatCurrency(expectedUgxTotal, 'UGX'));
+      await expect(usdRevenueLine).toContainText(formatCurrency(expectedUsdTotal, 'USD'));
+      await expect(ugxRevenueLine).toContainText(formatCurrency(expectedUgxTotal, 'UGX'));
+    } finally {
+      if (createdBatchUuid) {
+        await cleanupDelete(page, `/api/harvest/${createdBatchUuid}`);
+      }
+
+      if (createdWarehouseUuid) {
+        await cleanupDelete(page, `/api/warehouse/${createdWarehouseUuid}`);
+      }
+
+      if (createdProductUuid) {
+        await cleanupDelete(page, `/api/product/${createdProductUuid}`);
+      }
+    }
   });
 });
