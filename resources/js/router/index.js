@@ -77,9 +77,13 @@ const routes = [
         meta: { requiresAuth: true },
     },
     {
-        path: '/harvest/:batchUuid',
+        path: '/harvest/public/:batchUuid',
         name: 'harvest-public',
         component: HarvestPublicView,
+    },
+    {
+        path: '/harvest/:batchUuid',
+        redirect: (to) => ({ name: 'harvest-public', params: { batchUuid: to.params.batchUuid } }),
     },
     {
         path: '/login',
@@ -112,7 +116,6 @@ router.beforeEach(async (to) => {
     await auth.ensureInitialized();
 
     const isAuthenticated = Boolean(auth.state.user);
-
     if (to.meta.requiresAuth && !isAuthenticated) {
         return {
             name: 'login',

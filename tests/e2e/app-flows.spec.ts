@@ -3,11 +3,74 @@ import { expect, test } from '@playwright/test';
 async function login(page: Parameters<Parameters<typeof test>[1]>[0]['page'], email: string, password: string) {
   await page.goto('/login');
 
-  await page.getByRole('textbox').first().fill(email);
-  await page.getByLabel(/password|nenosiri|ebyokusanyusa/i).fill(password);
-  await page.getByRole('button', { name: /sign in|ingia/i }).click();
+  const authProbeStatus = await page.evaluate(async ({ email, password }) => {
+    await fetch('/sanctum/csrf-cookie', {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        Accept: 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+    });
 
+    const csrfCookie = document.cookie
+      .split('; ')
+      .find((cookie) => cookie.startsWith('XSRF-TOKEN='));
+
+    const xsrfToken = csrfCookie ? decodeURIComponent(csrfCookie.split('=').slice(1).join('=')) : null;
+
+    const form = new URLSearchParams();
+    form.set('email', email);
+    form.set('password', password);
+    form.set('remember', 'on');
+
+    await fetch('/login', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'X-Requested-With': 'XMLHttpRequest',
+        ...(xsrfToken ? { 'X-XSRF-TOKEN': xsrfToken } : {}),
+      },
+      body: form.toString(),
+    });
+
+    const probe = await fetch('/api/user', {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        Accept: 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+    });
+
+    return probe.status;
+  }, { email, password });
+
+  if (authProbeStatus !== 200) {
+    await page.getByLabel(/email|barua pepe/i).fill(email);
+    await page.getByLabel(/password|nenosiri|ebyokusanyusa/i).fill(password);
+    await page.getByRole('button', { name: /sign in|ingia/i }).click();
+  }
+
+  await page.goto('/');
   await expect(page).not.toHaveURL(/\/login/);
+
+  const finalAuthStatus = await page.evaluate(async () => {
+    const probe = await fetch('/api/user', {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        Accept: 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+    });
+
+    return probe.status;
+  });
+
+  expect(finalAuthStatus).toBe(200);
 }
 
 function sumRevenueByCurrency(sales: Array<{ currency?: string; total_value?: number | string | null }>) {

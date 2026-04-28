@@ -20,7 +20,7 @@ return [
         'inventory' => 'Sitooko',
         'harvests' => 'Amakungula',
         'products' => 'Ebintu',
-        'corporations' => 'Amakampuni',
+        'corporations' => 'Kkampuni',
         'warehouses' => 'Sitowa',
         'users' => 'Abakozesa',
         'sales' => 'Okugyako',
@@ -28,7 +28,7 @@ return [
     ],
     'dashboard' => [
         'title' => 'Dashibodi',
-        'subtitle' => 'Laba okulaba ku obungibwa bwa omwaka gwa amawulire ogwaliwo n\'ebifaananyo bya sitowa.',
+        'subtitle' => 'Laba mu bufunze obungibwa bwonna n\'ebya sitooko ya sitowa.',
         'unknown_product' => 'Ekintu Ekitamanyiddwa',
         'fields' => [
             'products' => 'Ebintu',
@@ -45,7 +45,6 @@ return [
             'empty_warehouse' => 'Tewali sitooko eterekeddwa mu sitowa eno.',
             'empty' => 'Tewali sitowa zituukana noonyo lyo.',
         ],
-    ],
         'actions' => [
             'sell_inventory' => 'Gyawo',
             'sales_history' => 'Laba Ebifaananyo bya Okugyako',
@@ -56,6 +55,7 @@ return [
             'sales' => 'okugyako',
             'view_in' => 'Laba mu',
         ],
+    ],
     'sales_history' => [
         'title' => 'Ebifaananyo bya Okugyako',
         'subtitle' => 'Laba ebifaananyo byonna ebya okugyako n ebiggya byo.',
@@ -115,7 +115,7 @@ return [
     ],
     'products' => [
         'title' => 'Ebintu',
-        'subtitle' => 'Ebintu byonna ebiri mu database.',
+        'subtitle' => 'Ebintu byonna',
         'unnamed' => 'Ekintu Ekitalina Linnya',
         'fields' => [
             'name' => 'Erinnya',
@@ -202,7 +202,7 @@ return [
     ],
     'harvest_public' => [
         'title' => 'Ebikwata ku Kukungula',
-        'batch' => 'Batch :uuid',
+        'batch' => 'Batch {uuid}',
         'fields' => [
             'product' => 'Ekintu',
             'product_uuid' => 'Product UUID',
@@ -248,7 +248,7 @@ return [
     ],
     'warehouses' => [
         'title' => 'Sitowa',
-        'subtitle' => 'Dukanya ebiwandiiko bya sitowa n\'ebifo.',
+        'subtitle' => 'Dukanya sitowa n\'ebifo.',
         'map_label' => 'Ekifo',
         'map_hint' => 'Nyiga ku maapu okuteekawo koodinati za sitowa.',
         'unnamed' => 'Sitowa Etalina Linnya',
@@ -353,6 +353,16 @@ return [
             'success' => 'Ebyokusanyusa byo byasaziddwa. Tulinaba okugendesa ku Ingia...',
         ],
     ],
+    'tenant_selection' => [
+        'title' => 'Londa Tenant',
+        'subtitle' => 'Londa tenant gyoyagala okufuga mu session eno.',
+        'messages' => [
+            'loading' => 'Tusoma tenants...',
+            'load_error' => 'Tetusobodde kusoma tenant options.',
+            'select_error' => 'Tetusobodde kulonda tenant eno.',
+            'empty' => 'Tewali tenant eri ku akawunti yo.',
+        ],
+    ],
     'users' => [
         'title' => 'Abakozesa',
         'subtitle' => 'Dukanya abakozesa n\'obuyita obw\'okuyingira.',
@@ -396,7 +406,7 @@ return [
     ],
     'sales' => [
         'title' => 'Saito ebya Okugyako',
-        'subtitle' => 'Terekera ebigyako bwe bugyawo mu sitoka.',
+        'subtitle' => 'Gya ebintu era otereeze sitooko.',
         'fields' => [
             'product' => 'Ekintu',
             'batch' => 'Ogupangisa',
@@ -428,7 +438,7 @@ return [
             'sale_details' => 'Ebikwata by\'Okugyako',
             'scan_qr' => 'Kinyigesesa koodyiQR okulaba ebikwata by\'ogupangisa',
             'thank_you' => 'Webale nokugyako!',
-            'powered_by' => 'Byagendesebwa ku AgriFlow',
+            'powered_by' => 'Byagendesebwa ku Ekibanja WMS',
             'print' => 'Teremo Ebifaananyo',
             'close' => 'Ggalawo',
             'back_to_sales' => 'Ddayo ku Sitooko eby\'okugyako',

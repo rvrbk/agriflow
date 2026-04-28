@@ -49,7 +49,7 @@ async function submit() {
                     class="mx-auto grid h-[42px] w-[42px] place-items-center rounded-[11px] bg-[linear-gradient(140deg,_#214f34,_#317f4f)] text-sm font-extrabold tracking-[0.04em] text-[#f8fff8] shadow-[0_8px_16px_rgb(42_91_57_/_24%)]"
                     aria-hidden="true"
                 >
-                    AF
+                    EK
                 </div>
                 <h1 class="mt-4 text-2xl font-bold text-[#1f2a1d]">{{ t('login.title') }}</h1>
                 <p class="text-sm text-[#4e5f4f]">{{ t('login.subtitle') }}</p>

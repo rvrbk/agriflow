@@ -139,7 +139,7 @@ class HarvestController extends Controller
             'quality' => $harvest->quality,
             'qr_code' => $harvest->qr_code,
             'qr_payload' => $harvest->qr_payload,
-            'qr_url' => url('/harvest/' . $harvest->batch_uuid),
+            'qr_url' => url('/harvest/public/' . $harvest->batch_uuid),
         ];
     }
 }

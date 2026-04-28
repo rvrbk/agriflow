@@ -20,7 +20,7 @@ return [
         'inventory' => 'Hesabu',
         'harvests' => 'Mavuno',
         'products' => 'Bidhaa',
-        'corporations' => 'Makampuni',
+        'corporations' => 'Kampuni',
         'warehouses' => 'Maghala',
         'users' => 'Watumiaji',
         'sales' => 'Mauzo',
@@ -28,7 +28,7 @@ return [
     ],
     'dashboard' => [
         'title' => 'Dashibodi',
-        'subtitle' => 'Mwistikia wa mwaka wa kifedha wa sasa na hesabu ya ghala.',
+        'subtitle' => 'Muhtasari wa jumla ya mapato na hesabu ya ghala.',
         'unknown_product' => 'Bidhaa Isiyojulikana',
         'fields' => [
             'products' => 'Bidhaa',
@@ -45,7 +45,6 @@ return [
             'empty_warehouse' => 'Hakuna hesabu iliyohifadhiwa katika ghala hili bado.',
             'empty' => 'Hakuna maghala yanayolingana na utafutaji wako.',
         ],
-    ],
         'actions' => [
             'sell_inventory' => 'Uuza',
             'sales_history' => 'Angalia Historia ya Mauzo',
@@ -56,6 +55,7 @@ return [
             'sales' => 'mauzo',
             'view_in' => 'Tazama kwa',
         ],
+    ],
     'sales_history' => [
         'title' => 'Historia ya Mauzo',
         'subtitle' => 'Angalia mauzo yote yaliyorekodiwa pamoja na bei.',
@@ -115,7 +115,7 @@ return [
     ],
     'products' => [
         'title' => 'Bidhaa',
-        'subtitle' => 'Bidhaa zote kwenye hifadhidata.',
+        'subtitle' => 'Bidhaa zote',
         'unnamed' => 'Bidhaa Isiyo na Jina',
         'fields' => [
             'name' => 'Jina',
@@ -202,7 +202,7 @@ return [
     ],
     'harvest_public' => [
         'title' => 'Maelezo ya Mavuno',
-        'batch' => 'Batch :uuid',
+        'batch' => 'Batch {uuid}',
         'fields' => [
             'product' => 'Bidhaa',
             'product_uuid' => 'Product UUID',
@@ -248,7 +248,7 @@ return [
     ],
     'warehouses' => [
         'title' => 'Maghala',
-        'subtitle' => 'Simamia rekodi za maghala na maeneo.',
+        'subtitle' => 'Simamia maghala na maeneo.',
         'map_label' => 'Eneo',
         'map_hint' => 'Bofya ramani kuweka viwianishi vya ghala.',
         'unnamed' => 'Ghala Lisilo na Jina',
@@ -353,6 +353,16 @@ return [
             'success' => 'Nenosiri lako limewekwa. Inakwenda kuukurasa wa Kuingia...',
         ],
     ],
+    'tenant_selection' => [
+        'title' => 'Chagua Kampuni',
+        'subtitle' => 'Chagua kampuni unayotaka kusimamia kwenye kipindi hiki.',
+        'messages' => [
+            'loading' => 'Inapakia kampuni...',
+            'load_error' => 'Imeshindwa kupakia chaguo za kampuni.',
+            'select_error' => 'Imeshindwa kuchagua kampuni hii.',
+            'empty' => 'Hakuna kampuni zinazopatikana kwa akaunti yako.',
+        ],
+    ],
     'users' => [
         'title' => 'Watumiaji',
         'subtitle' => 'Simamia watumiaji wa mfumo na mialiko.',
@@ -395,7 +405,7 @@ return [
     ],
     'sales' => [
         'title' => 'Uuza Hirizi',
-        'subtitle' => 'Rekodi mauzo kwa kuondoa hisa ya hirizi.',
+        'subtitle' => 'Uza bidhaa na sasisha hesabu ya ghala.',
         'fields' => [
             'product' => 'Bidhaa',
             'batch' => 'Dafu',
@@ -427,7 +437,7 @@ return [
             'sale_details' => 'Maelezo ya Mauzo',
             'scan_qr' => 'Soma QR Code kwa maelezo ya dafu',
             'thank_you' => 'Asante kwa biashara!',
-            'powered_by' => 'Inasambazwa na AgriFlow',
+            'powered_by' => 'Inasambazwa na Ekibanja WMS',
             'print' => 'Chapisha Risiti',
             'close' => 'Funga',
             'back_to_sales' => 'Rudi Mauzo',

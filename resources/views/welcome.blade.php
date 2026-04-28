@@ -7,7 +7,7 @@
         <meta name="mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="default">
-        <meta name="apple-mobile-web-app-title" content="AgriFlow">
+        <meta name="apple-mobile-web-app-title" content="Ekibanja WMS">
         <link rel="apple-touch-icon" href="/icons/pwa-192x192.png">
         @if (file_exists(public_path('build/manifest.webmanifest')))
             <link rel="manifest" href="/build/manifest.webmanifest">

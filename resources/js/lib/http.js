@@ -54,4 +54,8 @@ axios.interceptors.response.use(
 	},
 );
 
+if (window.__AGRIFLOW_E2E__ === true) {
+	window.__AGRIFLOW_HTTP__ = axios;
+}
+
 export default axios;

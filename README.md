@@ -1,6 +1,6 @@
-# AgriFlow
+# Ekibanja WMS
 
-AgriFlow is a multi-tenant agricultural operations platform for managing products, warehouses, harvests, inventory, and sales with multi-currency revenue reporting.
+Ekibanja WMS is a multi-tenant agricultural operations platform for managing products, warehouses, harvests, inventory, and sales with multi-currency revenue reporting.
 
 ## Current Technical Baseline
 

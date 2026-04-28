@@ -19,7 +19,7 @@ Route::get('translations/{locale}', [TranslationController::class, 'show'])
 
 Route::get('harvest/public/{batchUuid}', [HarvestController::class, 'publicShow'])->name('harvest.public.show');
 
-Route::middleware(['auth:sanctum', 'needsTenant'])->get('user', function (Request $request) {
+Route::middleware(['auth:sanctum'])->get('user', function (Request $request) {
     return $request->user();
 })->name('user.current');
 

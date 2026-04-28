@@ -20,7 +20,7 @@ return [
         'inventory' => 'Inventory',
         'harvests' => 'Harvests',
         'products' => 'Products',
-        'corporations' => 'Corporations',
+        'corporations' => 'Corporation',
         'warehouses' => 'Warehouses',
         'users' => 'Users',
         'sales' => 'Sales',
@@ -28,7 +28,7 @@ return [
     ],
     'dashboard' => [
         'title' => 'Dashboard',
-        'subtitle' => 'Overview of current fiscal year revenue and warehouse inventory.',
+        'subtitle' => 'Overview of total revenue and warehouse inventory.',
         'unknown_product' => 'Unknown Product',
         'fields' => [
             'products' => 'Products',
@@ -115,7 +115,7 @@ return [
     ],
     'products' => [
         'title' => 'Products',
-        'subtitle' => 'All products in the database.',
+        'subtitle' => 'All products',
         'unnamed' => 'Unnamed Product',
         'fields' => [
             'name' => 'Name',
@@ -202,7 +202,7 @@ return [
     ],
     'harvest_public' => [
         'title' => 'Harvest Details',
-        'batch' => 'Batch :uuid',
+        'batch' => 'Batch {uuid}',
         'fields' => [
             'product' => 'Product',
             'product_uuid' => 'Product UUID',
@@ -248,7 +248,7 @@ return [
     ],
     'warehouses' => [
         'title' => 'Warehouses',
-        'subtitle' => 'Manage warehouse records and locations.',
+        'subtitle' => 'Manage warehouses and locations.',
         'map_label' => 'Location',
         'map_hint' => 'Click on the map to set the warehouse coordinates.',
         'unnamed' => 'Unnamed Warehouse',
@@ -353,6 +353,16 @@ return [
             'success' => 'Your password has been set. Redirecting to login...',
         ],
     ],
+    'tenant_selection' => [
+        'title' => 'Select Tenant',
+        'subtitle' => 'Choose the tenant you want to manage for this session.',
+        'messages' => [
+            'loading' => 'Loading tenants...',
+            'load_error' => 'Could not load tenant options.',
+            'select_error' => 'Could not select this tenant.',
+            'empty' => 'No tenants are available for your account.',
+        ],
+    ],
     'users' => [
         'title' => 'Users',
         'subtitle' => 'Manage platform users and invitations.',
@@ -396,7 +406,7 @@ return [
     ],
     'sales' => [
         'title' => 'Sell Inventory',
-        'subtitle' => 'Record sales by removing inventory stock.',
+        'subtitle' => 'Sell products and update inventory stock.',
         'fields' => [
             'product' => 'Product',
             'batch' => 'Batch',
@@ -428,7 +438,7 @@ return [
             'sale_details' => 'Sale Details',
             'scan_qr' => 'Scan QR Code for batch details',
             'thank_you' => 'Thank you for your business!',
-            'powered_by' => 'Powered by AgriFlow',
+            'powered_by' => 'Powered by Ekibanja WMS',
             'print' => 'Print Receipt',
             'close' => 'Close',
             'back_to_sales' => 'Back to Sales',

@@ -6,10 +6,10 @@
                     class="grid h-[42px] w-[42px] shrink-0 place-items-center rounded-[11px] bg-[linear-gradient(140deg,_#214f34,_#317f4f)] text-sm font-extrabold tracking-[0.04em] text-[#f8fff8] shadow-[0_8px_16px_rgb(42_91_57_/_24%)]"
                     aria-hidden="true"
                 >
-                    AF
+                    EK
                 </div>
                 <div class="min-w-0">
-                    <p class="m-0 truncate text-sm font-bold tracking-[0.02em] sm:text-base">AgriFlow</p>
+                    <p class="m-0 truncate text-sm font-bold tracking-[0.02em] sm:text-base">Ekibanja WMS</p>
                     <p class="m-0 hidden text-xs uppercase tracking-[0.09em] text-[#5d684f] sm:block">{{ t('header.subtitle') }}</p>
                 </div>
             </div>

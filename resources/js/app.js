@@ -12,7 +12,9 @@ const isLocalHost = window.location.hostname === 'localhost'
 	|| window.location.hostname === '127.0.0.1'
 	|| window.location.hostname.endsWith('.test');
 
-if (isLocalHost) {
+const shouldForceServiceWorker = window.__AGRIFLOW_FORCE_SW__ === true;
+
+if (isLocalHost && !shouldForceServiceWorker) {
 	if ('serviceWorker' in navigator) {
 		void navigator.serviceWorker.getRegistrations().then((registrations) => {
 			registrations.forEach((registration) => {

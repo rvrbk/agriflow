@@ -103,7 +103,7 @@ watch([loading, sale, error], ([isLoading, currentSale, currentError]) => {
         <div class="receipt-container mx-auto max-w-2xl bg-white rounded-xl shadow-lg p-6 md:p-8">
             <!-- Header -->
             <div class="receipt-header mb-6 text-center border-b-2 border-[#2f6e4a] pb-4">
-                <h1 class="text-2xl md:text-3xl font-bold text-[#2f6e4a]">AgriFlow</h1>
+                <h1 class="text-2xl md:text-3xl font-bold text-[#2f6e4a]">Ekibanja WMS</h1>
                 <p class="text-sm text-[#6b826b]">{{ t('sales.receipt.subtitle') }}</p>
             </div>
 
