@@ -16,7 +16,7 @@ class WarehouseController extends Controller
     {
         $warehouses = Warehouse::query()
             ->leftJoin('corporations', 'warehouses.corporation_id', '=', 'corporations.id')
-            ->orderBy('name')
+            ->orderBy('warehouses.name')
             ->get([
                 'warehouses.id',
                 'warehouses.uuid',

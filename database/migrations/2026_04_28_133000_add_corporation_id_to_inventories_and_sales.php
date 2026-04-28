@@ -17,14 +17,46 @@ return new class extends Migration
             $table->index('corporation_id');
         });
 
-        DB::statement('UPDATE inventories i INNER JOIN batches b ON b.id = i.batch_id SET i.corporation_id = b.corporation_id WHERE i.corporation_id IS NULL');
+        if (DB::getDriverName() === 'sqlite') {
+            DB::table('inventories')
+                ->whereNull('corporation_id')
+                ->orderBy('id')
+                ->select(['id', 'batch_id'])
+                ->chunkById(200, function ($rows): void {
+                    foreach ($rows as $row) {
+                        $corporationId = DB::table('batches')->where('id', $row->batch_id)->value('corporation_id');
+
+                        if ($corporationId !== null) {
+                            DB::table('inventories')->where('id', $row->id)->update(['corporation_id' => $corporationId]);
+                        }
+                    }
+                });
+        } else {
+            DB::statement('UPDATE inventories i INNER JOIN batches b ON b.id = i.batch_id SET i.corporation_id = b.corporation_id WHERE i.corporation_id IS NULL');
+        }
 
         Schema::table('sales', function (Blueprint $table): void {
             $table->foreignId('corporation_id')->nullable()->after('uuid')->constrained('corporations')->nullOnDelete();
             $table->index('corporation_id');
         });
 
-        DB::statement('UPDATE sales s INNER JOIN batches b ON b.id = s.batch_id SET s.corporation_id = b.corporation_id WHERE s.corporation_id IS NULL');
+        if (DB::getDriverName() === 'sqlite') {
+            DB::table('sales')
+                ->whereNull('corporation_id')
+                ->orderBy('id')
+                ->select(['id', 'batch_id'])
+                ->chunkById(200, function ($rows): void {
+                    foreach ($rows as $row) {
+                        $corporationId = DB::table('batches')->where('id', $row->batch_id)->value('corporation_id');
+
+                        if ($corporationId !== null) {
+                            DB::table('sales')->where('id', $row->id)->update(['corporation_id' => $corporationId]);
+                        }
+                    }
+                });
+        } else {
+            DB::statement('UPDATE sales s INNER JOIN batches b ON b.id = s.batch_id SET s.corporation_id = b.corporation_id WHERE s.corporation_id IS NULL');
+        }
     }
 
     /**

@@ -1,60 +1,108 @@
-## https://ugachickpoultrybreeders.com/
+# AgriFlow
 
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+AgriFlow is a multi-tenant agricultural operations platform for managing products, warehouses, harvests, inventory, and sales with multi-currency revenue reporting.
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Current Technical Baseline
 
-## About Laravel
+- Backend: Laravel 13, PHP 8.3
+- Frontend: Vue 3 SPA, Vue Router, Vue I18n, Vite
+- Auth: Laravel Fortify + Sanctum (session and CSRF based SPA auth)
+- Tenancy: Spatie laravel-multitenancy, domain-based tenant resolution
+- Translation: Server-backed UI dictionaries for en, lg, sw
+- Database: Relational schema with JSON fields (for translatable names)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Functional Scope
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### Included
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- Authentication: login, logout, forgot password, set password
+- Tenant-aware operations for:
+	- Corporations (tenant model and domain owner)
+	- Users
+	- Warehouses
+	- Products
+	- Harvest batches
+	- Inventory
+	- Sales and receipts
+- Dashboard with tenant-scoped revenue widgets
+- Sales history with currency conversion and totals
+- Translation switching (English, Luganda, Swahili)
 
-## Learning Laravel
+### Removed / Not in Use
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- Fiscal year module
+- Manual inventory adjust endpoint and UI controls
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Inventory now changes through business events only:
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+- Harvest creation/update increases or replaces stock
+- Sale recording decreases stock
 
-## Agentic Development
+## Multi-Tenancy Model
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+Tenancy is resolved by request host:
+
+- `config/multitenancy.php` uses `DomainTenantFinder`
+- Tenant model is `App\\Models\\Corporation`
+- Protected SPA/API routes require tenant context (`needsTenant` middleware)
+
+Tenant ownership is explicit through `corporation_id` on core domain tables.
+
+## Authentication Flow (SPA)
+
+1. Client requests CSRF cookie (`/sanctum/csrf-cookie`)
+2. Client posts to Fortify endpoints (`/login`, `/forgot-password`, `/reset-password`, `/logout`)
+3. Client fetches current user from `/api/user`
+4. API routes are protected by `auth:sanctum` and `needsTenant`
+
+## API Snapshot
+
+Public routes:
+
+- `GET /api/translations/{locale}`
+- `GET /api/harvest/public/{batchUuid}`
+
+Authenticated tenant routes (sample):
+
+- `GET /api/user`
+- `GET/POST/DELETE /api/product`
+- `GET/POST/DELETE /api/warehouse`
+- `GET/POST/DELETE /api/harvest`
+- `GET /api/inventory`
+- `POST /api/inventory/sell`
+- `GET /api/sales`
+- `GET /api/sales/{uuid}`
+- `GET/PUT /api/currencies...`
+- `GET/POST/PUT/DELETE /api/users...`
+
+## Local Setup
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate --force
+php artisan db:seed
+npm install
+npm run build
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+For active development:
 
-## Contributing
+```bash
+composer run dev
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Tenant Setup Checklist
 
-## Code of Conduct
+1. Ensure each corporation has a unique `domain`
+2. Point each tenant domain/subdomain to the application
+3. Access the app through a tenant domain so `needsTenant` can resolve context
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Documentation
 
-## Security Vulnerabilities
+Detailed docs are under `docs/`:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+- Technical docs index: `docs/README.md`
+- Functional behavior reference: `docs/FUNCTIONAL_OVERVIEW.md`
 
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).

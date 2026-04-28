@@ -2,7 +2,14 @@
 
 ## Overview
 
-This directory contains comprehensive documentation for the Agriflow project, covering architecture, API specifications, code style guidelines, database schema, and team structure.
+This directory contains project documentation for AgriFlow, including architecture, API behavior, data model notes, and functional behavior.
+
+The docs in this folder were updated to reflect:
+
+- domain-based multi-tenancy (Spatie)
+- tenant-owned core entities (users, warehouses, products, harvests, inventory, sales)
+- SPA session auth via Fortify/Sanctum
+- removed fiscal-year module and manual inventory adjust flow
 
 ## Documentation Structure
 
@@ -102,6 +109,7 @@ docs/
 
 | Document | Last Updated | Version | Author |
 |----------|--------------|---------|--------|
+| FUNCTIONAL_OVERVIEW.md | April 28, 2026 | 2.0 | AI Assistant |
 | SYSTEM_ARCHITECTURE.md | April 13, 2026 | 1.0 | AI Assistant |
 | API_DOCUMENTATION.md | April 25, 2026 | 1.1 | AI Assistant |
 | SALES_FEATURE.md | April 25, 2026 | 1.0 | AI Assistant |
@@ -162,5 +170,5 @@ For questions about documentation:
 
 ---
 
-*Last updated: April 13, 2026*
+*Last updated: April 28, 2026*
 *Maintained by: Agriflow Development Team*

@@ -19,8 +19,34 @@ return new class extends Migration
         });
 
         // First pass: assign ownership from inventory/sales usage when unambiguous.
-        DB::statement('UPDATE products p INNER JOIN inventories i ON i.product_id = p.id SET p.corporation_id = i.corporation_id WHERE p.corporation_id IS NULL AND i.corporation_id IS NOT NULL');
-        DB::statement('UPDATE products p INNER JOIN sales s ON s.product_id = p.id SET p.corporation_id = s.corporation_id WHERE p.corporation_id IS NULL AND s.corporation_id IS NOT NULL');
+        if (DB::getDriverName() === 'sqlite') {
+            DB::table('products')
+                ->whereNull('corporation_id')
+                ->orderBy('id')
+                ->select(['id'])
+                ->chunkById(200, function ($rows): void {
+                    foreach ($rows as $row) {
+                        $corporationId = DB::table('inventories')
+                            ->where('product_id', $row->id)
+                            ->whereNotNull('corporation_id')
+                            ->value('corporation_id');
+
+                        if ($corporationId === null) {
+                            $corporationId = DB::table('sales')
+                                ->where('product_id', $row->id)
+                                ->whereNotNull('corporation_id')
+                                ->value('corporation_id');
+                        }
+
+                        if ($corporationId !== null) {
+                            DB::table('products')->where('id', $row->id)->update(['corporation_id' => $corporationId]);
+                        }
+                    }
+                });
+        } else {
+            DB::statement('UPDATE products p INNER JOIN inventories i ON i.product_id = p.id SET p.corporation_id = i.corporation_id WHERE p.corporation_id IS NULL AND i.corporation_id IS NOT NULL');
+            DB::statement('UPDATE products p INNER JOIN sales s ON s.product_id = p.id SET p.corporation_id = s.corporation_id WHERE p.corporation_id IS NULL AND s.corporation_id IS NOT NULL');
+        }
 
         $sharedFromInventory = DB::table('inventories')
             ->select('product_id')
