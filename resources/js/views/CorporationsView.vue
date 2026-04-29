@@ -11,6 +11,10 @@ const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const auth = useAuthStore();
+const AFRICA_MAP_BOUNDS = [
+    [-35, -20],
+    [37, 52],
+];
 
 const form = reactive({
     uuid: '',
@@ -130,6 +134,13 @@ function setFormFromCorporation(corporation) {
 }
 
 function readCoordinatesFromForm() {
+    const hasLatitude = form.locationLatitude !== '' && form.locationLatitude !== null && form.locationLatitude !== undefined;
+    const hasLongitude = form.locationLongitude !== '' && form.locationLongitude !== null && form.locationLongitude !== undefined;
+
+    if (!hasLatitude || !hasLongitude) {
+        return null;
+    }
+
     const latitude = Number(form.locationLatitude);
     const longitude = Number(form.locationLongitude);
 
@@ -211,8 +222,8 @@ function initializeMap() {
     const coordinates = readCoordinatesFromForm();
     const mapCenter = coordinates
         ? [coordinates.latitude, coordinates.longitude]
-        : [20, 0];
-    const mapZoom = coordinates ? 12 : 2;
+        : [0, 20];
+    const mapZoom = coordinates ? 12 : 4;
 
     mapInstance = L.map(mapContainer.value, {
         zoomControl: true,
@@ -222,6 +233,10 @@ function initializeMap() {
         maxZoom: 19,
         attribution: '&copy; OpenStreetMap contributors',
     }).addTo(mapInstance);
+
+    if (!coordinates) {
+        mapInstance.fitBounds(AFRICA_MAP_BOUNDS, { padding: [20, 20] });
+    }
 
     mapInstance.on('click', (event) => {
         void setCoordinatesFromMapClick(event.latlng.lat, event.latlng.lng);

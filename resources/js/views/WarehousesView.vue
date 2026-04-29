@@ -18,6 +18,9 @@ const addError = ref('');
 const searchTerm = ref('');
 const addGeocodingError = ref('');
 const editGeocodingError = reactive({});
+const countries = ref([]);
+const countriesLoading = ref(false);
+const countriesError = ref('');
 const addMapContainer = ref(null);
 const editMapContainer = ref(null);
 const activeEditUuid = ref('');
@@ -27,6 +30,10 @@ const editForms = reactive({});
 const editSaving = reactive({});
 const editError = reactive({});
 const deleteSaving = reactive({});
+const AFRICA_MAP_BOUNDS = [
+    [-35, -20],
+    [37, 52],
+];
 
 const newWarehouse = reactive({
     name: '',
@@ -73,6 +80,21 @@ const filteredWarehouses = computed(() => {
         ].some((value) => String(value || '').toLowerCase().includes(query));
     });
 });
+
+const countryByCode = computed(() => {
+    return countries.value.reduce((accumulator, item) => {
+        accumulator[item.code] = item.name;
+        return accumulator;
+    }, {});
+});
+
+function formatCountryName(countryCode) {
+    if (!countryCode) {
+        return '-';
+    }
+
+    return countryByCode.value[countryCode] ?? countryCode;
+}
 
 function normalizeWarehouse(warehouse) {
     const location = parseLocation(warehouse.location);
@@ -165,6 +187,13 @@ async function reverseGeocode(latitude, longitude) {
 }
 
 function readCoordinates(latitudeValue, longitudeValue) {
+    const hasLatitude = latitudeValue !== '' && latitudeValue !== null && latitudeValue !== undefined;
+    const hasLongitude = longitudeValue !== '' && longitudeValue !== null && longitudeValue !== undefined;
+
+    if (!hasLatitude || !hasLongitude) {
+        return null;
+    }
+
     const latitude = Number(latitudeValue);
     const longitude = Number(longitudeValue);
 
@@ -239,8 +268,8 @@ function initializeAddMap() {
     }
 
     const coordinates = readCoordinates(newWarehouse.locationLatitude, newWarehouse.locationLongitude);
-    const mapCenter = coordinates ? [coordinates.latitude, coordinates.longitude] : [20, 0];
-    const mapZoom = coordinates ? 12 : 2;
+    const mapCenter = coordinates ? [coordinates.latitude, coordinates.longitude] : [0, 20];
+    const mapZoom = coordinates ? 12 : 4;
 
     addMapInstance = L.map(container, {
         zoomControl: true,
@@ -250,6 +279,10 @@ function initializeAddMap() {
         maxZoom: 19,
         attribution: '&copy; OpenStreetMap contributors',
     }).addTo(addMapInstance);
+
+    if (!coordinates) {
+        addMapInstance.fitBounds(AFRICA_MAP_BOUNDS, { padding: [20, 20] });
+    }
 
     addMapInstance.on('click', (event) => {
         void setAddCoordinatesFromMapClick(event.latlng.lat, event.latlng.lng);
@@ -341,8 +374,8 @@ function initializeEditMap(warehouseUuid) {
 
     const form = editForms[warehouseUuid];
     const coordinates = readCoordinates(form.locationLatitude, form.locationLongitude);
-    const mapCenter = coordinates ? [coordinates.latitude, coordinates.longitude] : [20, 0];
-    const mapZoom = coordinates ? 12 : 2;
+    const mapCenter = coordinates ? [coordinates.latitude, coordinates.longitude] : [0, 20];
+    const mapZoom = coordinates ? 12 : 4;
 
     editMapInstance = L.map(container, {
         zoomControl: true,
@@ -352,6 +385,10 @@ function initializeEditMap(warehouseUuid) {
         maxZoom: 19,
         attribution: '&copy; OpenStreetMap contributors',
     }).addTo(editMapInstance);
+
+    if (!coordinates) {
+        editMapInstance.fitBounds(AFRICA_MAP_BOUNDS, { padding: [20, 20] });
+    }
 
     editMapInstance.on('click', (event) => {
         void setEditCoordinatesFromMapClick(warehouseUuid, event.latlng.lat, event.latlng.lng);
@@ -403,6 +440,21 @@ async function loadWarehouses() {
         loadError.value = t('warehouses.messages.load_error');
     } finally {
         loading.value = false;
+    }
+}
+
+async function loadCountries() {
+    countriesLoading.value = true;
+    countriesError.value = '';
+
+    try {
+        const response = await http.get('/api/countries');
+        countries.value = Array.isArray(response.data) ? response.data : [];
+    } catch {
+        countriesError.value = t('warehouses.messages.countries_error');
+        countries.value = [];
+    } finally {
+        countriesLoading.value = false;
     }
 }
 
@@ -514,7 +566,7 @@ async function deleteWarehouse(warehouse) {
     }
 }
 
-void loadWarehouses();
+void Promise.all([loadWarehouses(), loadCountries()]);
 
 watch(addFormOpen, async (open) => {
     if (!open) {
@@ -601,7 +653,12 @@ onBeforeUnmount(() => {
 
                 <label class="block">
                     <span class="mb-1 block text-sm font-medium text-[#1f2a1d]">{{ t('warehouses.fields.country') }}</span>
-                    <input v-model="newWarehouse.country" type="text" class="w-full rounded-lg border border-[#ccd8c7] bg-white px-3 py-2">
+                    <select v-model="newWarehouse.country" :disabled="countriesLoading" class="w-full rounded-lg border border-[#ccd8c7] bg-white px-3 py-2">
+                        <option value="">{{ t('warehouses.select_country') }}</option>
+                        <option v-for="country in countries" :key="country.code" :value="country.code">{{ country.name }}</option>
+                    </select>
+                    <p v-if="countriesError" class="mt-1 text-xs text-red-700">{{ countriesError }}</p>
+                    <p v-else class="mt-1 text-xs text-[#4e5f4f]">{{ t('warehouses.country_hint') }}</p>
                 </label>
 
                 <div class="rounded-lg border border-[#ccd8c7] bg-white px-3 py-2">
@@ -652,7 +709,7 @@ onBeforeUnmount(() => {
                         <p class="text-sm text-[#4e5f4f]">{{ t('warehouses.fields.address') }}: {{ warehouse.address || '-' }}</p>
                         <p class="text-sm text-[#4e5f4f]">{{ t('warehouses.fields.city') }}: {{ warehouse.city || '-' }}</p>
                         <p class="text-sm text-[#4e5f4f]">{{ t('warehouses.fields.state') }}: {{ warehouse.state || '-' }}</p>
-                        <p class="text-sm text-[#4e5f4f]">{{ t('warehouses.fields.country') }}: {{ warehouse.country || '-' }}</p>
+                        <p class="text-sm text-[#4e5f4f]">{{ t('warehouses.fields.country') }}: {{ formatCountryName(warehouse.country) }}</p>
                         <p class="text-sm text-[#4e5f4f]">{{ t('warehouses.fields.latitude') }}: {{ warehouse.locationLatitude || '-' }}</p>
                         <p class="text-sm text-[#4e5f4f]">{{ t('warehouses.fields.longitude') }}: {{ warehouse.locationLongitude || '-' }}</p>
                     </div>
@@ -706,7 +763,12 @@ onBeforeUnmount(() => {
 
                         <label class="block">
                             <span class="mb-1 block text-sm font-medium text-[#1f2a1d]">{{ t('warehouses.fields.country') }}</span>
-                            <input v-model="editForms[warehouse.uuid].country" type="text" class="w-full rounded-lg border border-[#ccd8c7] bg-white px-3 py-2">
+                            <select v-model="editForms[warehouse.uuid].country" :disabled="countriesLoading" class="w-full rounded-lg border border-[#ccd8c7] bg-white px-3 py-2">
+                                <option value="">{{ t('warehouses.select_country') }}</option>
+                                <option v-for="country in countries" :key="country.code" :value="country.code">{{ country.name }}</option>
+                            </select>
+                            <p v-if="countriesError" class="mt-1 text-xs text-red-700">{{ countriesError }}</p>
+                            <p v-else class="mt-1 text-xs text-[#4e5f4f]">{{ t('warehouses.country_hint') }}</p>
                         </label>
 
                         <div class="rounded-lg border border-[#ccd8c7] bg-white px-3 py-2">

@@ -257,6 +257,8 @@ return [
         'map_hint' => 'Click on the map to set the warehouse coordinates.',
         'unnamed' => 'Unnamed Warehouse',
         'select_warehouse' => 'Select Warehouse',
+        'select_country' => 'Select Country',
+        'country_hint' => 'Choose a country from the list.',
         'fields' => [
             'name' => 'Name',
             'corporation' => 'Corporation',
@@ -291,6 +293,7 @@ return [
             'geocoding_error' => 'Could not fetch address details for this location.',
             'delete_linked_error' => 'This warehouse is linked to inventory records and cannot be deleted.',
             'delete_confirm' => 'Delete warehouse "{name}"?',
+            'countries_error' => 'Could not load countries right now.',
         ],
     ],
     'login' => [

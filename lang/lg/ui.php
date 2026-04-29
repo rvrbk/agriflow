@@ -253,6 +253,8 @@ return [
         'map_hint' => 'Nyiga ku maapu okuteekawo koodinati za sitowa.',
         'unnamed' => 'Sitowa Etalina Linnya',
         'select_warehouse' => 'Londra Sitowa',
+        'select_country' => 'Londa Eggwanga',
+        'country_hint' => 'Londa eggwanga okuva ku lukalala.',
         'fields' => [
             'name' => 'Erinnya',
             'corporation' => 'Kkampuni',
@@ -287,6 +289,7 @@ return [
             'geocoding_error' => 'Tetusobodde kufuna ebikwata ku ndagiriro y\'ekifo kino.',
             'delete_linked_error' => 'Sitowa eno egattiddwa ku biwandiiko bya sitooko era tesobola kuggyibwawo.',
             'delete_confirm' => 'Ogyaawo sitowa "{name}"?',
+            'countries_error' => 'Tetusobodde kusoma olukalala lw’amawanga kati.',
         ],
     ],
     'login' => [

@@ -253,6 +253,8 @@ return [
         'map_hint' => 'Bofya ramani kuweka viwianishi vya ghala.',
         'unnamed' => 'Ghala Lisilo na Jina',
         'select_warehouse' => 'Chagua Ghala',
+        'select_country' => 'Chagua Nchi',
+        'country_hint' => 'Chagua nchi kutoka kwenye orodha.',
         'fields' => [
             'name' => 'Jina',
             'corporation' => 'Kampuni',
@@ -291,6 +293,7 @@ return [
             'geocoding_error' => 'Imeshindwa kupata maelezo ya anwani kwa eneo hili.',
             'delete_linked_error' => 'Ghala hili limeunganishwa na rekodi za hesabu na haliwezi kufutwa.',
             'delete_confirm' => 'Futa ghala "{name}"?',
+            'countries_error' => 'Imeshindwa kupakia nchi kwa sasa.',
         ],
     ],
     'login' => [
