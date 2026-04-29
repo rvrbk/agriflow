@@ -3,9 +3,14 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRoute, useRouter } from 'vue-router';
 import http from '../lib/http';
+import { useAuthStore } from '../stores/auth';
 
 const { t } = useI18n();
+const route = useRoute();
+const router = useRouter();
+const auth = useAuthStore();
 
 const form = reactive({
     uuid: '',
@@ -29,6 +34,7 @@ const countries = ref([]);
 const countriesLoading = ref(false);
 const countriesError = ref('');
 const geocodingError = ref('');
+const isTenantBootstrap = ref(false);
 
 let mapInstance = null;
 let selectedPointLayer = null;
@@ -242,6 +248,7 @@ async function loadCorporation() {
     try {
         const response = await http.get('/api/corporation');
         setFormFromCorporation(response.data);
+        isTenantBootstrap.value = !response.data?.uuid;
     } catch (error) {
         loadError.value = t('corporation.load_error');
     } finally {
@@ -272,11 +279,19 @@ async function submitCorporation() {
             : null,
     };
 
+    const wasTenantBootstrap = isTenantBootstrap.value;
+
     try {
         await http.post('/api/corporation', [payload]);
+        await auth.refreshUser();
         saveMessage.value = t('corporation.save_success');
         await loadCorporation();
         isEditing.value = false;
+
+        if (wasTenantBootstrap) {
+            const redirectTo = typeof route.query.redirect === 'string' ? route.query.redirect : '/';
+            await router.push(redirectTo);
+        }
     } catch (error) {
         saveError.value = t('corporation.save_error');
     } finally {

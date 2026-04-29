@@ -10,10 +10,12 @@ class CorporationService
 {
     /**
      * @param array $data
-     * @return void
+     * @return Corporation|null
      */
-    public function store(array $data): void
+    public function store(array $data): ?Corporation
     {
+        $lastCorporation = null;
+
         foreach ($data as $row) {
             $corporation = null;
 
@@ -35,6 +37,9 @@ class CorporationService
             $corporation->country = $row['country'] ?? null;
 
             $corporation->save();
+            $lastCorporation = $corporation;
         }
+
+        return $lastCorporation;
     }
 }

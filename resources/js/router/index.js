@@ -132,7 +132,18 @@ router.beforeEach(async (to) => {
     }
 
     if (to.meta.guestOnly && isAuthenticated) {
+        if (!auth.state.user?.corporation_id) {
+            return { name: 'corporations' };
+        }
+
         return { name: 'dashboard' };
+    }
+
+    if (to.meta.requiresAuth && isAuthenticated && !auth.state.user?.corporation_id && to.name !== 'corporations') {
+        return {
+            name: 'corporations',
+            query: { redirect: to.fullPath },
+        };
     }
 
     return true;

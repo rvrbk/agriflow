@@ -28,4 +28,4 @@ Route::get('/harvest/{batchUuid}', function () {
 
 Route::get('/{any}', function () {
     return view('welcome');
-})->middleware('needsTenant')->where('any', '.*');
+})->where('any', '.*');

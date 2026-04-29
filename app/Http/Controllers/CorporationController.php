@@ -16,6 +16,10 @@ class CorporationController extends Controller
     {
         $currentTenant = Corporation::current();
 
+        if (! $currentTenant) {
+            return response()->json([]);
+        }
+
         $corporations = Corporation::query()
             ->when($currentTenant, fn ($query) => $query->whereKey($currentTenant->id))
             ->orderBy('name')
@@ -32,6 +36,10 @@ class CorporationController extends Controller
     {
         $currentTenant = Corporation::current();
 
+        if (! $currentTenant) {
+            return response()->json(null);
+        }
+
         $corporation = Corporation::query()
             ->when($currentTenant, fn ($query) => $query->whereKey($currentTenant->id))
             ->latest('id')
@@ -46,7 +54,16 @@ class CorporationController extends Controller
      */
     public function post(Request $request): JsonResponse
     {
-        app()->make(CorporationService::class)->store($request->all());
+        $corporation = app()->make(CorporationService::class)->store($request->all());
+
+        $user = $request->user();
+        if ($corporation && $user && $user->corporation_id !== $corporation->id) {
+            $user->forceFill(['corporation_id' => $corporation->id])->save();
+        }
+
+        if ($corporation) {
+            $corporation->makeCurrent();
+        }
 
         return response()->json([
             $request->all()
