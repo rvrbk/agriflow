@@ -256,7 +256,6 @@ return [
         'fields' => [
             'name' => 'Jina',
             'corporation' => 'Kampuni',
-            'capacity' => 'Uwezo',
             'address' => 'Anwani',
             'city' => 'Jiji',
             'state' => 'Mkoa',
@@ -283,6 +282,10 @@ return [
             'search_placeholder' => 'Tafuta kwa jina, kampuni, anwani, jiji, mkoa, nchi au UUID...',
             'load_error' => 'Imeshindwa kupakia maghala.',
             'add_error' => 'Imeshindwa kuongeza ghala. Tafadhali hakiki thamani ujaribu tena.',
+            'add_queued' => 'Bidhaa imehifadhiwa offline na imewekwa kwenye foleni ya usawazishaji.',
+            'add_synced' => 'Usawazishaji wa bidhaa iliyokuwa kwenye foleni umekamilika.',
+            'pending_sync' => 'Inasubiri usawazishaji',
+            'sync_failed' => 'Bidhaa iliyokuwa kwenye foleni haikusawazishwa bado. Tafadhali unganisha mtandao ujaribu tena.',
             'save_error' => 'Imeshindwa kuhifadhi mabadiliko ya ghala hili.',
             'delete_error' => 'Imeshindwa kufuta ghala hili.',
             'geocoding_error' => 'Imeshindwa kupata maelezo ya anwani kwa eneo hili.',

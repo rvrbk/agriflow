@@ -256,7 +256,6 @@ return [
         'fields' => [
             'name' => 'Erinnya',
             'corporation' => 'Kkampuni',
-            'capacity' => 'Obusobozi',
             'address' => 'Endagiriro',
             'city' => 'Ekibuga',
             'state' => 'Essaza',
@@ -411,6 +410,10 @@ return [
             'product' => 'Ekintu',
             'batch' => 'Ogupangisa',
             'harvested_on' => 'Ogukungulwa',
+            'add_queued' => 'Ekintu kiterekeddwa offline era kirindiridde okusindika.',
+            'add_synced' => 'Okusindika ekintu ekibadde kirindiridde kuwedde.',
+            'pending_sync' => 'Kirindiridde okusindika',
+            'sync_failed' => 'Ekintu ekibadde kirindiridde tekisobodde kusindikibwa kati. Ddamu ng\'oli online.',
             'warehouse' => 'Sitowa',
             'quality' => 'Obulungi',
             'quantity' => 'Obungi',

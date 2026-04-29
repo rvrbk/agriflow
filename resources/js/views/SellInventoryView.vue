@@ -1,8 +1,9 @@
 <script setup>
-import { computed, reactive, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { RouterLink } from 'vue-router';
 import http from '../lib/http';
+import { readCachedList, writeCachedList } from '../services/offlineDataCache';
 
 const { t } = useI18n();
 
@@ -18,6 +19,8 @@ const sellCurrencies = reactive({});
 const selling = reactive({});
 const lastSaleUuid = ref(null);
 const buyerName = ref('');
+const INVENTORY_CACHE_KEY = 'inventory';
+const SALES_CACHE_KEY = 'sales';
 
 const currencyOptions = [
     { code: 'USD', symbol: '$', name: 'US Dollar' },
@@ -54,6 +57,14 @@ function getStep(unit) {
     return unit === 'pcs' ? 1 : 0.01;
 }
 
+function initializeSellCurrenciesForRows() {
+    rows.value.forEach((row) => {
+        if (!sellCurrencies[row.batch_uuid]) {
+            sellCurrencies[row.batch_uuid] = 'UGX';
+        }
+    });
+}
+
 async function loadInventory() {
     loading.value = true;
     loadError.value = '';
@@ -61,14 +72,18 @@ async function loadInventory() {
     try {
         const response = await http.get('/api/inventory');
         rows.value = Array.isArray(response.data) ? response.data : [];
-        // Initialize currency for each row to UGX
-        rows.value.forEach(row => {
-            if (!sellCurrencies[row.batch_uuid]) {
-                sellCurrencies[row.batch_uuid] = 'UGX';
-            }
-        });
+        writeCachedList(INVENTORY_CACHE_KEY, rows.value);
+        initializeSellCurrenciesForRows();
     } catch {
-        loadError.value = t('sales.messages.load_error');
+        const cachedRows = readCachedList(INVENTORY_CACHE_KEY);
+
+        if (cachedRows.length > 0) {
+            rows.value = cachedRows;
+            initializeSellCurrenciesForRows();
+            loadError.value = '';
+        } else {
+            loadError.value = t('sales.messages.load_error');
+        }
     } finally {
         loading.value = false;
     }
@@ -110,6 +125,48 @@ async function sell(row) {
             buyer_name: buyerName.value || null,
         });
 
+        if (response?.data?.queued || !navigator.onLine) {
+            const pendingSaleUuid = `pending-${Date.now()}`;
+
+            rows.value = rows.value.map((item) => {
+                if (item.batch_uuid !== row.batch_uuid) {
+                    return item;
+                }
+
+                return {
+                    ...item,
+                    quantity: Math.max(0, Number(item.quantity || 0) - amount),
+                };
+            });
+            writeCachedList(INVENTORY_CACHE_KEY, rows.value);
+
+            const cachedSales = readCachedList(SALES_CACHE_KEY);
+            cachedSales.unshift({
+                uuid: pendingSaleUuid,
+                product_name: row.product_name,
+                product_unit: row.product_unit,
+                batch_uuid: row.batch_uuid,
+                harvested_on: row.harvested_on,
+                warehouse_name: row.warehouse_name,
+                quantity: amount,
+                unit_price: price,
+                currency,
+                total_value: price * amount,
+                buyer_name: buyerName.value || null,
+                created_at: new Date().toISOString(),
+                pending_sync: true,
+            });
+            writeCachedList(SALES_CACHE_KEY, cachedSales);
+
+            lastSaleUuid.value = pendingSaleUuid;
+            actionSuccess.value = t('products.messages.add_queued');
+            sellAmounts[row.batch_uuid] = '';
+            sellPrices[row.batch_uuid] = '';
+            sellCurrencies[row.batch_uuid] = 'UGX';
+            buyerName.value = '';
+            return;
+        }
+
         const saleData = response.data;
         lastSaleUuid.value = saleData.uuid;
 
@@ -130,6 +187,36 @@ async function sell(row) {
         selling[row.batch_uuid] = false;
     }
 }
+
+async function handleQueueSynced(event) {
+    const url = String(event?.detail?.url ?? '');
+
+    if (!url.startsWith('/api/inventory/sell') && !url.startsWith('/api/sales')) {
+        return;
+    }
+
+    await loadInventory();
+}
+
+function handleQueueDropped(event) {
+    const url = String(event?.detail?.url ?? '');
+
+    if (!url.startsWith('/api/inventory/sell') && !url.startsWith('/api/sales')) {
+        return;
+    }
+
+    actionError.value = t('sales.messages.sell_error');
+}
+
+onMounted(() => {
+    window.addEventListener('offline-queue:synced', handleQueueSynced);
+    window.addEventListener('offline-queue:dropped', handleQueueDropped);
+});
+
+onBeforeUnmount(() => {
+    window.removeEventListener('offline-queue:synced', handleQueueSynced);
+    window.removeEventListener('offline-queue:dropped', handleQueueDropped);
+});
 
 void loadInventory();
 </script>

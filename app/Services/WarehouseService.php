@@ -48,7 +48,6 @@ class WarehouseService
 
             $warehouse->name = $row['name'];
             $warehouse->location = isset($row['location']) ? json_encode($row['location']) : null;
-            $warehouse->capacity = $row['capacity'] ?? null;
             $warehouse->address = $row['address'] ?? null;
             $warehouse->city = $row['city'] ?? null;
             $warehouse->state = $row['state'] ?? null;

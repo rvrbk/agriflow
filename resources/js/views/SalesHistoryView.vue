@@ -1,8 +1,9 @@
 <script setup>
-import { computed, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { RouterLink } from 'vue-router';
 import http from '../lib/http';
+import { readCachedList, removeCachedRow, upsertCachedRow, writeCachedList } from '../services/offlineDataCache';
 
 const { t } = useI18n();
 
@@ -12,6 +13,9 @@ const loadError = ref('');
 const searchTerm = ref('');
 const currencies = ref([]);
 const displayCurrency = ref('UGX');
+const actionError = ref('');
+const actionSuccess = ref('');
+const SALES_CACHE_KEY = 'sales';
 
 // Load exchange rates
 async function loadCurrencies() {
@@ -181,12 +185,119 @@ async function loadSales() {
                 formatted_total_display: formatDisplayCurrency(numericTotal, sale.currency),
             };
         }) : [];
+        writeCachedList(SALES_CACHE_KEY, sales.value);
     } catch {
-        loadError.value = t('sales_history.messages.load_error');
+        const cachedSales = readCachedList(SALES_CACHE_KEY);
+
+        if (cachedSales.length > 0) {
+            sales.value = cachedSales;
+            loadError.value = '';
+        } else {
+            loadError.value = t('sales_history.messages.load_error');
+        }
     } finally {
         loading.value = false;
     }
 }
+
+async function editSale(sale) {
+    const quantityInput = window.prompt('Quantity', String(sale.quantity ?? 0));
+    if (quantityInput === null) {
+        return;
+    }
+
+    const priceInput = window.prompt('Unit price', String(sale.unit_price ?? 0));
+    if (priceInput === null) {
+        return;
+    }
+
+    const nextQuantity = Number(quantityInput);
+    const nextUnitPrice = Number(priceInput);
+
+    if (!Number.isFinite(nextQuantity) || nextQuantity <= 0 || !Number.isFinite(nextUnitPrice) || nextUnitPrice < 0) {
+        actionError.value = t('sales.messages.invalid_amount');
+        return;
+    }
+
+    actionError.value = '';
+
+    try {
+        const response = await http.put(`/api/sales/${sale.uuid}`, {
+            quantity: nextQuantity,
+            unit_price: nextUnitPrice,
+            currency: sale.currency || 'UGX',
+            buyer_name: sale.buyer_name ?? null,
+        });
+
+        const updated = {
+            ...sale,
+            quantity: nextQuantity,
+            unit_price: nextUnitPrice,
+            total_value: nextQuantity * nextUnitPrice,
+            pending_sync: Boolean(response?.data?.queued || !navigator.onLine),
+            formatted_price: formatCurrency(nextUnitPrice, sale.currency),
+            formatted_total: formatCurrency(nextQuantity * nextUnitPrice, sale.currency),
+            formatted_price_display: formatDisplayCurrency(nextUnitPrice, sale.currency),
+            formatted_total_display: formatDisplayCurrency(nextQuantity * nextUnitPrice, sale.currency),
+        };
+
+        sales.value = sales.value.map((row) => row.uuid === sale.uuid ? updated : row);
+        upsertCachedRow(SALES_CACHE_KEY, updated);
+
+        actionSuccess.value = response?.data?.queued || !navigator.onLine ? t('products.messages.add_queued') : 'Sale updated.';
+    } catch {
+        actionError.value = t('sales.messages.sell_error');
+    }
+}
+
+async function deleteSale(sale) {
+    const confirmed = window.confirm(`Delete sale ${sale.uuid}?`);
+
+    if (!confirmed) {
+        return;
+    }
+
+    actionError.value = '';
+
+    try {
+        const response = await http.delete(`/api/sales/${sale.uuid}`);
+        sales.value = sales.value.filter((row) => row.uuid !== sale.uuid);
+        removeCachedRow(SALES_CACHE_KEY, sale.uuid);
+        actionSuccess.value = response?.data?.queued || !navigator.onLine ? t('products.messages.add_queued') : 'Sale deleted.';
+    } catch {
+        actionError.value = t('sales.messages.sell_error');
+    }
+}
+
+async function handleQueueSynced(event) {
+    const url = String(event?.detail?.url ?? '');
+
+    if (!url.startsWith('/api/inventory/sell') && !url.startsWith('/api/sales')) {
+        return;
+    }
+
+    await loadSales();
+}
+
+function handleQueueDropped(event) {
+    const url = String(event?.detail?.url ?? '');
+
+    if (!url.startsWith('/api/inventory/sell') && !url.startsWith('/api/sales')) {
+        return;
+    }
+
+    actionError.value = t('sales.messages.sell_error');
+}
+
+onMounted(() => {
+    window.addEventListener('offline-queue:synced', handleQueueSynced);
+    window.addEventListener('offline-queue:dropped', handleQueueDropped);
+});
+
+onBeforeUnmount(() => {
+    window.removeEventListener('offline-queue:synced', handleQueueSynced);
+    window.removeEventListener('offline-queue:dropped', handleQueueDropped);
+});
 
 void loadSales();
 </script>
@@ -200,6 +311,8 @@ void loadSales();
 
         <p v-if="loading" class="text-sm text-[#4e5f4f]">{{ t('sales_history.messages.loading') }}</p>
         <p v-if="loadError" class="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{{ loadError }}</p>
+        <p v-if="actionError" class="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{{ actionError }}</p>
+        <p v-if="actionSuccess" class="mb-3 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700">{{ actionSuccess }}</p>
 
         <!-- Currency Toggle & Total Revenue Summary -->
         <div v-if="!loading && sales.length > 0" class="mb-6 rounded-lg border border-[#ccd8c7] bg-[#f7f9f7] p-4">
@@ -281,6 +394,20 @@ void loadSales();
                         </svg>
                         {{ t('sales.actions.print_receipt') }}
                     </RouterLink>
+                    <button
+                        type="button"
+                        class="inline-flex items-center gap-1.5 rounded-lg border border-[#ccd8c7] bg-white px-3 py-1.5 text-sm font-medium text-[#1f2a1d] hover:bg-[#f4f8ed]"
+                        @click="editSale(sale)"
+                    >
+                        {{ t('products.actions.edit') }}
+                    </button>
+                    <button
+                        type="button"
+                        class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-100"
+                        @click="deleteSale(sale)"
+                    >
+                        {{ t('products.actions.delete') }}
+                    </button>
                 </div>
             </article>
 

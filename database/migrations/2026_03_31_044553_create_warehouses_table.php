@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->json('location')->nullable();
-            $table->float('capacity')->nullable();
             $table->timestamps();
         });
     }

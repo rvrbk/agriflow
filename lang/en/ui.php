@@ -141,6 +141,10 @@ return [
             'search_placeholder' => 'Search by name, code, type, unit, or UUID...',
             'load_error' => 'Could not load products.',
             'add_error' => 'Could not add product. Please check the values and try again.',
+            'add_queued' => 'Product saved offline and queued for sync.',
+            'add_synced' => 'Queued product sync completed.',
+            'pending_sync' => 'Pending sync',
+            'sync_failed' => 'Queued product could not be synced yet. Please reconnect and try again.',
             'save_error' => 'Could not save changes for this product.',
             'delete_error' => 'Could not delete this product.',
             'delete_linked_error' => 'This product is linked to harvest records and cannot be deleted.',
@@ -256,7 +260,6 @@ return [
         'fields' => [
             'name' => 'Name',
             'corporation' => 'Corporation',
-            'capacity' => 'Capacity',
             'address' => 'Address',
             'city' => 'City',
             'state' => 'State',

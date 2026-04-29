@@ -7,6 +7,7 @@ use App\Models\Inventory;
 use App\Models\Sale;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class InventoryController extends Controller
 {
@@ -249,6 +250,111 @@ class InventoryController extends Controller
             'total_value' => $sale->total_value,
             'currency' => $sale->currency ?? 'USD',
             'created_at' => $sale->created_at,
+        ]);
+    }
+
+    /**
+     * Update a sale and reconcile inventory quantity.
+     */
+    public function updateSale(Request $request, string $uuid): JsonResponse
+    {
+        $tenantId = $this->currentTenantId();
+
+        $validated = $request->validate([
+            'quantity' => ['required', 'numeric', 'gt:0'],
+            'unit_price' => ['nullable', 'numeric', 'min:0'],
+            'currency' => ['required', 'string', 'in:USD,UGX'],
+            'buyer_name' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $sale = Sale::query()
+            ->when($tenantId, fn ($query) => $query->where('corporation_id', $tenantId))
+            ->where('uuid', $uuid)
+            ->first();
+
+        if (! $sale) {
+            return response()->json([
+                'message' => 'Sale not found.',
+            ], 404);
+        }
+
+        $inventory = Inventory::query()
+            ->where('batch_id', $sale->batch_id)
+            ->where('product_id', $sale->product_id)
+            ->where('warehouse_id', $sale->warehouse_id)
+            ->when($tenantId, fn ($query) => $query->where('corporation_id', $tenantId))
+            ->first();
+
+        if (! $inventory) {
+            return response()->json([
+                'message' => 'Inventory not found.',
+            ], 404);
+        }
+
+        $newQuantity = (float) $validated['quantity'];
+        $oldQuantity = (float) $sale->quantity;
+        $inventoryAvailableAfterRollback = (float) $inventory->quantity + $oldQuantity;
+
+        if ($newQuantity > $inventoryAvailableAfterRollback) {
+            return response()->json([
+                'message' => 'Insufficient inventory quantity.',
+            ], 422);
+        }
+
+        DB::transaction(function () use ($sale, $inventory, $validated, $newQuantity, $inventoryAvailableAfterRollback): void {
+            $inventory->quantity = $inventoryAvailableAfterRollback - $newQuantity;
+            $inventory->save();
+
+            $unitPrice = isset($validated['unit_price']) ? (float) $validated['unit_price'] : null;
+            $sale->quantity = $newQuantity;
+            $sale->unit_price = $unitPrice;
+            $sale->currency = $validated['currency'];
+            $sale->buyer_name = $validated['buyer_name'] ?? null;
+            $sale->total_value = $unitPrice !== null ? $newQuantity * $unitPrice : null;
+            $sale->save();
+        });
+
+        return response()->json([
+            'message' => 'Sale updated.',
+        ]);
+    }
+
+    /**
+     * Delete a sale and restore sold quantity to inventory.
+     */
+    public function deleteSale(string $uuid): JsonResponse
+    {
+        $tenantId = $this->currentTenantId();
+
+        $sale = Sale::query()
+            ->when($tenantId, fn ($query) => $query->where('corporation_id', $tenantId))
+            ->where('uuid', $uuid)
+            ->first();
+
+        if (! $sale) {
+            return response()->json([
+                'message' => 'Sale not found.',
+            ], 404);
+        }
+
+        $inventory = Inventory::query()
+            ->where('batch_id', $sale->batch_id)
+            ->where('product_id', $sale->product_id)
+            ->where('warehouse_id', $sale->warehouse_id)
+            ->when($tenantId, fn ($query) => $query->where('corporation_id', $tenantId))
+            ->first();
+
+        DB::transaction(function () use ($sale, $inventory): void {
+            if ($inventory) {
+                $inventory->quantity = (float) $inventory->quantity + (float) $sale->quantity;
+                $inventory->save();
+            }
+
+            $sale->delete();
+        });
+
+        return response()->json([
+            'message' => 'Sale deleted.',
         ]);
     }
 }

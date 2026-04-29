@@ -46,6 +46,8 @@ Route::middleware(['auth:sanctum', SetCurrentTenantFromUser::class, 'needsTenant
     Route::post('inventory/sell', [InventoryController::class, 'sell'])->name('inventory.sell');
     Route::get('sales', [InventoryController::class, 'salesHistory'])->name('sales.history');
     Route::get('sales/{uuid}', [InventoryController::class, 'getSale'])->name('sales.get');
+    Route::put('sales/{uuid}', [InventoryController::class, 'updateSale'])->name('sales.update');
+    Route::delete('sales/{uuid}', [InventoryController::class, 'deleteSale'])->name('sales.delete');
     Route::get('currencies', [CurrencyController::class, 'index'])->name('currencies.list');
     Route::get('currencies/rate/{from}/{to}', [CurrencyController::class, 'rate'])->name('currencies.rate');
     Route::post('currencies/convert', [CurrencyController::class, 'convert'])->name('currencies.convert');

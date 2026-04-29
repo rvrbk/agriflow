@@ -2,19 +2,19 @@ import './bootstrap';
 import './lib/http';
 import { createApp } from 'vue';
 import { ZiggyVue } from 'ziggy-js';
-import { registerSW } from 'virtual:pwa-register';
 import router from './router';
 import App from './App.vue';
 import { i18n, initializeLocale } from './i18n';
 import { initializeOfflineQueue } from './services/offlineQueue';
 
-const isLocalHost = window.location.hostname === 'localhost'
-	|| window.location.hostname === '127.0.0.1'
-	|| window.location.hostname.endsWith('.test');
+const isLocalDevHost = window.location.hostname === 'localhost'
+	|| window.location.hostname === '127.0.0.1';
+
+const isViteDev = import.meta.env.DEV;
 
 const shouldForceServiceWorker = window.__AGRIFLOW_FORCE_SW__ === true;
 
-if (isLocalHost && !shouldForceServiceWorker) {
+if (isViteDev && isLocalDevHost && !shouldForceServiceWorker) {
 	if ('serviceWorker' in navigator) {
 		void navigator.serviceWorker.getRegistrations().then((registrations) => {
 			registrations.forEach((registration) => {
@@ -23,7 +23,17 @@ if (isLocalHost && !shouldForceServiceWorker) {
 		});
 	}
 } else {
-	registerSW({ immediate: true });
+	if ('serviceWorker' in navigator) {
+		void navigator.serviceWorker.getRegistrations().then((registrations) => {
+			registrations
+				.filter((registration) => registration.scope.includes('/build/'))
+				.forEach((registration) => {
+					void registration.unregister();
+				});
+
+			void navigator.serviceWorker.register('/sw.js', { scope: '/' });
+		});
+	}
 }
 
 initializeOfflineQueue();

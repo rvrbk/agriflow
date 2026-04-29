@@ -51,6 +51,18 @@ function isMutatingMethod(method) {
     return MUTATING_METHODS.has(normalizeMethod(method));
 }
 
+function normalizeQueuedData(data) {
+    if (typeof data !== 'string') {
+        return data;
+    }
+
+    try {
+        return JSON.parse(data);
+    } catch {
+        return data;
+    }
+}
+
 export function queueRequestFromConfig(config) {
     if (!config?.url || !isMutatingMethod(config.method)) {
         return null;
@@ -61,7 +73,7 @@ export function queueRequestFromConfig(config) {
         id: createQueueId(),
         method: normalizeMethod(config.method),
         url: config.url,
-        data: config.data,
+        data: normalizeQueuedData(config.data),
         params: config.params,
         queuedAt: new Date().toISOString(),
     };
@@ -80,7 +92,7 @@ function shouldRetryLater(error) {
     }
 
     const status = error.response.status;
-    return status >= 500 || status === 429;
+    return status >= 500 || status === 429 || status === 401 || status === 403 || status === 419;
 }
 
 export async function processOfflineQueue() {
@@ -92,6 +104,14 @@ export async function processOfflineQueue() {
 
     try {
         const queue = readQueue();
+
+        if (queue.length > 0) {
+            try {
+                await rawHttpClient.get('/sanctum/csrf-cookie');
+            } catch {
+                // If CSRF refresh fails, replay will retry later.
+            }
+        }
 
         while (queue.length > 0) {
             const next = queue[0];

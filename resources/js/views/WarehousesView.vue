@@ -31,7 +31,6 @@ const deleteSaving = reactive({});
 const newWarehouse = reactive({
     name: '',
     corporation_uuid: '',
-    capacity: null,
     address: '',
     city: '',
     state: '',
@@ -83,7 +82,6 @@ function normalizeWarehouse(warehouse) {
         name: warehouse.name ?? '',
         corporation_uuid: warehouse.corporation_uuid ?? '',
         corporation_name: warehouse.corporation_name ?? '',
-        capacity: warehouse.capacity ?? null,
         address: warehouse.address ?? '',
         city: warehouse.city ?? '',
         state: warehouse.state ?? '',
@@ -135,7 +133,6 @@ function initEditForm(warehouse) {
     editForms[warehouse.uuid] = {
         name: warehouse.name ?? '',
         corporation_uuid: warehouse.corporation_uuid ?? '',
-        capacity: warehouse.capacity ?? null,
         address: warehouse.address ?? '',
         city: warehouse.city ?? '',
         state: warehouse.state ?? '',
@@ -148,7 +145,6 @@ function initEditForm(warehouse) {
 function resetNewForm() {
     newWarehouse.name = '';
     newWarehouse.corporation_uuid = corporations.value[0]?.uuid ?? '';
-    newWarehouse.capacity = null;
     newWarehouse.address = '';
     newWarehouse.city = '';
     newWarehouse.state = '';
@@ -419,7 +415,6 @@ async function addWarehouse() {
             {
                 name: newWarehouse.name,
                 corporation_uuid: newWarehouse.corporation_uuid || null,
-                capacity: newWarehouse.capacity,
                 address: newWarehouse.address || null,
                 city: newWarehouse.city || null,
                 state: newWarehouse.state || null,
@@ -477,7 +472,6 @@ async function saveEdit(warehouse) {
                 uuid: warehouse.uuid,
                 name: form.name,
                 corporation_uuid: form.corporation_uuid || null,
-                capacity: form.capacity,
                 address: form.address || null,
                 city: form.city || null,
                 state: form.state || null,
@@ -591,11 +585,6 @@ onBeforeUnmount(() => {
                 </label>
 
                 <label class="block">
-                    <span class="mb-1 block text-sm font-medium text-[#1f2a1d]">{{ t('warehouses.fields.capacity') }}</span>
-                    <input v-model.number="newWarehouse.capacity" min="0" step="0.01" type="number" class="w-full rounded-lg border border-[#ccd8c7] bg-white px-3 py-2">
-                </label>
-
-                <label class="block">
                     <span class="mb-1 block text-sm font-medium text-[#1f2a1d]">{{ t('warehouses.fields.address') }}</span>
                     <input v-model="newWarehouse.address" type="text" class="w-full rounded-lg border border-[#ccd8c7] bg-white px-3 py-2">
                 </label>
@@ -660,7 +649,6 @@ onBeforeUnmount(() => {
                     <div>
                         <h3 class="text-lg font-semibold text-[#1f2a1d]">{{ warehouse.name || t('warehouses.unnamed') }}</h3>
                         <p class="text-sm text-[#4e5f4f]">{{ t('warehouses.fields.corporation') }}: {{ warehouse.corporation_name || '-' }}</p>
-                        <p class="text-sm text-[#4e5f4f]">{{ t('warehouses.fields.capacity') }}: {{ warehouse.capacity ?? '-' }}</p>
                         <p class="text-sm text-[#4e5f4f]">{{ t('warehouses.fields.address') }}: {{ warehouse.address || '-' }}</p>
                         <p class="text-sm text-[#4e5f4f]">{{ t('warehouses.fields.city') }}: {{ warehouse.city || '-' }}</p>
                         <p class="text-sm text-[#4e5f4f]">{{ t('warehouses.fields.state') }}: {{ warehouse.state || '-' }}</p>
@@ -699,11 +687,6 @@ onBeforeUnmount(() => {
                                 <option value="">-</option>
                                 <option v-for="corporation in corporations" :key="corporation.uuid" :value="corporation.uuid">{{ corporation.name }}</option>
                             </select>
-                        </label>
-
-                        <label class="block">
-                            <span class="mb-1 block text-sm font-medium text-[#1f2a1d]">{{ t('warehouses.fields.capacity') }}</span>
-                            <input v-model.number="editForms[warehouse.uuid].capacity" min="0" step="0.01" type="number" class="w-full rounded-lg border border-[#ccd8c7] bg-white px-3 py-2">
                         </label>
 
                         <label class="block">

@@ -19,7 +19,9 @@ class ProductService
      */
     public function store(array $data): void
     {
-        foreach ($data as $row) {
+        $rows = $this->normalizeRows($data);
+
+        foreach ($rows as $row) {
             if (!is_array($row)) {
                 continue;
             }
@@ -48,6 +50,50 @@ class ProductService
                 $this->storeProperties($product, $row['properties']);
             }
         }
+    }
+
+    /**
+     * Normalize inbound payload to a list of product row arrays.
+     *
+     * @param array $data
+     * @return array<int, array<string, mixed>>
+     */
+    private function normalizeRows(array $data): array
+    {
+        if (isset($data['name']) || isset($data['unit']) || isset($data['uuid'])) {
+            return [$data];
+        }
+
+        $rows = [];
+
+        foreach ($data as $row) {
+            if (is_string($row)) {
+                $decoded = json_decode($row, true);
+
+                if (is_array($decoded)) {
+                    $row = $decoded;
+                }
+            }
+
+            if (!is_array($row)) {
+                continue;
+            }
+
+            if (isset($row['name']) || isset($row['unit']) || isset($row['uuid'])) {
+                $rows[] = $row;
+                continue;
+            }
+
+            if ($row !== [] && array_is_list($row)) {
+                foreach ($row as $nestedRow) {
+                    if (is_array($nestedRow) && (isset($nestedRow['name']) || isset($nestedRow['unit']) || isset($nestedRow['uuid']))) {
+                        $rows[] = $nestedRow;
+                    }
+                }
+            }
+        }
+
+        return $rows;
     }
 
     /**

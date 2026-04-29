@@ -3,6 +3,7 @@ import { ref, onMounted, computed, watch, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, RouterLink } from 'vue-router';
 import http from '../lib/http';
+import { readCachedList } from '../services/offlineDataCache';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -55,13 +56,19 @@ async function loadSale() {
         const response = await http.get(`/api/sales/${saleUuid.value}`);
         sale.value = response.data;
     } catch (e) {
-        // Fallback: try to find in all sales
+        // Fallback: try to find in all sales from API
         try {
             const allResponse = await http.get('/api/sales');
             const allSales = Array.isArray(allResponse.data) ? allResponse.data : [];
             sale.value = allSales.find(s => s.uuid === saleUuid.value) || null;
         } catch (e2) {
-            error.value = t('sales.receipt.not_found');
+            // Final fallback: use offline cached sales list
+            const cachedSales = readCachedList('sales');
+            sale.value = cachedSales.find((s) => s.uuid === saleUuid.value) || null;
+
+            if (!sale.value) {
+                error.value = t('sales.receipt.not_found');
+            }
         }
     }
     

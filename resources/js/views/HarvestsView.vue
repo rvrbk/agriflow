@@ -1,8 +1,9 @@
 <script setup>
-import { computed, reactive, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import QRCode from 'qrcode';
 import http from '../lib/http';
+import { readCachedList, removeCachedRow, upsertCachedRow, writeCachedList } from '../services/offlineDataCache';
 
 const { t } = useI18n();
 
@@ -24,6 +25,7 @@ const editSaving = reactive({});
 const editError = reactive({});
 const deleteSaving = reactive({});
 const qrImages = reactive({});
+const CACHE_KEY = 'harvests';
 
 const qualityOptions = computed(() => [
     { value: 'high', label: t('harvests.quality.high') },
@@ -247,15 +249,25 @@ function printQr(harvest) {
 }
 
 async function loadLookups() {
-    const [productsResponse, warehousesResponse, corporationsResponse] = await Promise.all([
-        http.get('/api/product'),
-        http.get('/api/warehouse'),
-        http.get('/api/corporations'),
-    ]);
+    try {
+        const [productsResponse, warehousesResponse, corporationsResponse] = await Promise.all([
+            http.get('/api/product'),
+            http.get('/api/warehouse'),
+            http.get('/api/corporations'),
+        ]);
 
-    products.value = Array.isArray(productsResponse.data) ? productsResponse.data : [];
-    warehouses.value = Array.isArray(warehousesResponse.data) ? warehousesResponse.data : [];
-    corporations.value = Array.isArray(corporationsResponse.data) ? corporationsResponse.data : [];
+        products.value = Array.isArray(productsResponse.data) ? productsResponse.data : [];
+        warehouses.value = Array.isArray(warehousesResponse.data) ? warehousesResponse.data : [];
+        corporations.value = Array.isArray(corporationsResponse.data) ? corporationsResponse.data : [];
+
+        writeCachedList('products', products.value);
+        writeCachedList('warehouses', warehouses.value);
+        writeCachedList('corporations', corporations.value);
+    } catch {
+        products.value = readCachedList('products');
+        warehouses.value = readCachedList('warehouses');
+        corporations.value = readCachedList('corporations');
+    }
 
     if (!newHarvest.product_uuid && products.value.length > 0) {
         newHarvest.product_uuid = products.value[0].uuid;
@@ -280,6 +292,7 @@ async function loadHarvests() {
         harvests.value = Array.isArray(response.data)
             ? response.data.map(normalizeHarvest)
             : [];
+        writeCachedList(CACHE_KEY, harvests.value);
 
         harvests.value.forEach((harvest) => {
             initEditForm(harvest);
@@ -290,7 +303,21 @@ async function loadHarvests() {
 
         await Promise.all(harvests.value.map(renderQrImage));
     } catch {
-        loadError.value = t('harvests.messages.load_error');
+        const cachedHarvests = readCachedList(CACHE_KEY).map(normalizeHarvest);
+
+        if (cachedHarvests.length > 0) {
+            harvests.value = cachedHarvests;
+            harvests.value.forEach((harvest) => {
+                initEditForm(harvest);
+                if (!(harvest.batch_uuid in editStates)) {
+                    editStates[harvest.batch_uuid] = false;
+                }
+            });
+            await Promise.all(harvests.value.map(renderQrImage));
+            loadError.value = '';
+        } else {
+            loadError.value = t('harvests.messages.load_error');
+        }
     } finally {
         loading.value = false;
     }
@@ -301,7 +328,7 @@ async function addHarvest() {
     savingAdd.value = true;
 
     try {
-        await http.post('/api/harvest', [
+        const response = await http.post('/api/harvest', [
             {
                 product_uuid: newHarvest.product_uuid,
                 warehouse_uuid: newHarvest.warehouse_uuid,
@@ -314,6 +341,32 @@ async function addHarvest() {
                 replace_quantity: true,
             },
         ]);
+
+        if (response?.data?.queued || !navigator.onLine) {
+            const optimisticHarvest = normalizeHarvest({
+                batch_uuid: `pending-${Date.now()}`,
+                product_uuid: newHarvest.product_uuid,
+                product_name: getProductByUuid(newHarvest.product_uuid)?.name ?? '',
+                warehouse_uuid: newHarvest.warehouse_uuid,
+                warehouse_name: warehouses.value.find((w) => w.uuid === newHarvest.warehouse_uuid)?.name ?? '',
+                corporation_uuid: newHarvest.corporation_uuid,
+                corporation_name: corporations.value.find((c) => c.uuid === newHarvest.corporation_uuid)?.name ?? '',
+                quantity: Number(newHarvest.quantity),
+                location: newHarvest.location,
+                harvested_on: toApiDate(newHarvest.harvested_on),
+                expires_on: toApiDate(newHarvest.expires_on),
+                quality: newHarvest.quality,
+                qr_code: '',
+                qr_payload: '',
+            });
+
+            harvests.value = [optimisticHarvest, ...harvests.value];
+            upsertCachedRow(CACHE_KEY, optimisticHarvest, 'batch_uuid');
+            await renderQrImage(optimisticHarvest);
+            resetNewForm();
+            addFormOpen.value = false;
+            return;
+        }
 
         resetNewForm();
         addFormOpen.value = false;
@@ -348,7 +401,7 @@ async function saveEdit(harvest) {
     editSaving[harvest.batch_uuid] = true;
 
     try {
-        await http.post('/api/harvest', [
+        const response = await http.post('/api/harvest', [
             {
                 batch_uuid: harvest.batch_uuid,
                 product_uuid: form.product_uuid,
@@ -363,6 +416,29 @@ async function saveEdit(harvest) {
                 regenerate_qr: form.regenerate_qr,
             },
         ]);
+
+        if (response?.data?.queued || !navigator.onLine) {
+            const optimisticHarvest = normalizeHarvest({
+                ...harvest,
+                product_uuid: form.product_uuid,
+                product_name: getProductByUuid(form.product_uuid)?.name ?? harvest.product_name,
+                warehouse_uuid: form.warehouse_uuid,
+                warehouse_name: warehouses.value.find((w) => w.uuid === form.warehouse_uuid)?.name ?? harvest.warehouse_name,
+                corporation_uuid: form.corporation_uuid,
+                corporation_name: corporations.value.find((c) => c.uuid === form.corporation_uuid)?.name ?? harvest.corporation_name,
+                quantity: Number(form.quantity),
+                location: form.location,
+                harvested_on: toApiDate(form.harvested_on),
+                expires_on: toApiDate(form.expires_on),
+                quality: form.quality,
+            });
+
+            harvests.value = harvests.value.map((item) => item.batch_uuid === harvest.batch_uuid ? optimisticHarvest : item);
+            upsertCachedRow(CACHE_KEY, optimisticHarvest, 'batch_uuid');
+            await renderQrImage(optimisticHarvest);
+            editStates[harvest.batch_uuid] = false;
+            return;
+        }
 
         editStates[harvest.batch_uuid] = false;
         await loadHarvests();
@@ -384,7 +460,14 @@ async function deleteHarvest(harvest) {
     deleteSaving[harvest.batch_uuid] = true;
 
     try {
-        await http.delete(`/api/harvest/${harvest.batch_uuid}`);
+        const response = await http.delete(`/api/harvest/${harvest.batch_uuid}`);
+
+        if (response?.data?.queued || !navigator.onLine) {
+            harvests.value = harvests.value.filter((item) => item.batch_uuid !== harvest.batch_uuid);
+            removeCachedRow(CACHE_KEY, harvest.batch_uuid, 'batch_uuid');
+            return;
+        }
+
         await loadHarvests();
     } catch {
         editError[harvest.batch_uuid] = t('harvests.messages.delete_error');
@@ -404,6 +487,36 @@ async function initializePage() {
         loading.value = false;
     }
 }
+
+async function handleQueueSynced(event) {
+    const url = String(event?.detail?.url ?? '');
+
+    if (!url.startsWith('/api/harvest')) {
+        return;
+    }
+
+    await loadHarvests();
+}
+
+function handleQueueDropped(event) {
+    const url = String(event?.detail?.url ?? '');
+
+    if (!url.startsWith('/api/harvest')) {
+        return;
+    }
+
+    loadError.value = t('harvests.messages.save_error');
+}
+
+onMounted(() => {
+    window.addEventListener('offline-queue:synced', handleQueueSynced);
+    window.addEventListener('offline-queue:dropped', handleQueueDropped);
+});
+
+onBeforeUnmount(() => {
+    window.removeEventListener('offline-queue:synced', handleQueueSynced);
+    window.removeEventListener('offline-queue:dropped', handleQueueDropped);
+});
 
 void initializePage();
 </script>

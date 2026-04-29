@@ -21,7 +21,6 @@ class WarehouseController extends Controller
                 'warehouses.id',
                 'warehouses.uuid',
                 'warehouses.name',
-                'warehouses.capacity',
                 'warehouses.address',
                 'warehouses.city',
                 'warehouses.state',

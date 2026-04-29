@@ -13,6 +13,8 @@ export default defineConfig({
         tailwindcss(),
         vue(),
         VitePWA({
+            buildBase: '/',
+            injectRegister: false,
             registerType: 'autoUpdate',
             includeAssets: [
                 'favicon.ico',
@@ -70,6 +72,9 @@ export default defineConfig({
             workbox: {
                 cleanupOutdatedCaches: true,
                 navigateFallback: '/',
+                additionalManifestEntries: [
+                    { url: '/', revision: null },
+                ],
                 runtimeCaching: [
                     {
                         urlPattern: /^https:\/\/fonts\.bunny\.net\/.*$/i,

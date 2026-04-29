@@ -1,7 +1,8 @@
 <script setup>
-import { computed, reactive, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import http from '../lib/http';
+import { readCachedList, removeCachedRow, upsertCachedRow, writeCachedList } from '../services/offlineDataCache';
 
 const { t } = useI18n();
 
@@ -12,6 +13,7 @@ const searchTerm = ref('');
 const addFormOpen = ref(false);
 const savingAdd = ref(false);
 const addError = ref('');
+const addMessage = ref('');
 
 const editStates = reactive({});
 const editForms = reactive({});
@@ -48,12 +50,15 @@ const newProduct = reactive({
     unit: 'pcs',
 });
 
+const CACHE_KEY = 'products';
+
 function normalizeApiProduct(product) {
     return {
         uuid: product.uuid,
         name: product.name ?? '',
         unit: product.unit ?? 'pcs',
         is_linked_to_harvest: Boolean(product.is_linked_to_harvest),
+        pending_sync: Boolean(product.pending_sync),
     };
 }
 
@@ -78,6 +83,7 @@ async function loadProducts() {
         products.value = Array.isArray(response.data)
             ? response.data.map(normalizeApiProduct)
             : [];
+        writeCachedList(CACHE_KEY, products.value);
 
         products.value.forEach((product) => {
             initEditForm(product);
@@ -86,7 +92,20 @@ async function loadProducts() {
             }
         });
     } catch (error) {
-        loadError.value = t('products.messages.load_error');
+        const cachedProducts = readCachedList(CACHE_KEY).map(normalizeApiProduct);
+
+        if (cachedProducts.length > 0) {
+            products.value = cachedProducts;
+            products.value.forEach((product) => {
+                initEditForm(product);
+                if (!(product.uuid in editStates)) {
+                    editStates[product.uuid] = false;
+                }
+            });
+            loadError.value = '';
+        } else {
+            loadError.value = t('products.messages.load_error');
+        }
     } finally {
         loading.value = false;
     }
@@ -94,10 +113,11 @@ async function loadProducts() {
 
 async function addProduct() {
     addError.value = '';
+    addMessage.value = '';
     savingAdd.value = true;
 
     try {
-        await http.post('/api/product', [
+        const response = await http.post('/api/product', [
             {
                 name: newProduct.name,
                 unit: newProduct.unit,
@@ -105,14 +125,54 @@ async function addProduct() {
             },
         ]);
 
+        if (response?.data?.queued) {
+            const optimisticProduct = normalizeApiProduct({
+                uuid: `pending-${response.data.queueId ?? Date.now()}`,
+                name: newProduct.name,
+                unit: newProduct.unit,
+                is_linked_to_harvest: false,
+                pending_sync: true,
+            });
+
+            products.value = [optimisticProduct, ...products.value];
+            writeCachedList(CACHE_KEY, products.value);
+            initEditForm(optimisticProduct);
+            editStates[optimisticProduct.uuid] = false;
+
+            addMessage.value = t('products.messages.add_queued');
+            resetNewForm();
+            addFormOpen.value = false;
+            return;
+        }
+
         resetNewForm();
         addFormOpen.value = false;
+        addMessage.value = '';
         await loadProducts();
     } catch (error) {
         addError.value = t('products.messages.add_error');
     } finally {
         savingAdd.value = false;
     }
+}
+
+async function handleQueueSynced(event) {
+    const url = String(event?.detail?.url ?? '');
+
+    if (!url.startsWith('/api/product')) {
+        return;
+    }
+
+    addMessage.value = t('products.messages.add_synced');
+    await loadProducts();
+}
+
+function handleQueueDropped(event) {
+    if (event?.detail?.url !== '/api/product') {
+        return;
+    }
+
+    addError.value = t('products.messages.sync_failed');
 }
 
 function openEdit(product) {
@@ -138,7 +198,7 @@ async function saveEdit(product) {
     editSaving[product.uuid] = true;
 
     try {
-        await http.post('/api/product', [
+        const response = await http.post('/api/product', [
             {
                 uuid: product.uuid,
                 name: form.name,
@@ -146,6 +206,26 @@ async function saveEdit(product) {
                 properties: [],
             },
         ]);
+
+        if (String(product.uuid).startsWith('pending-')) {
+            editError[product.uuid] = t('products.messages.pending_sync');
+            return;
+        }
+
+        const queuedUpdate = {
+            ...product,
+            name: form.name,
+            unit: form.unit,
+            pending_sync: true,
+        };
+
+        if (response?.data?.queued || !navigator.onLine) {
+            products.value = products.value.map((item) => item.uuid === product.uuid ? queuedUpdate : item);
+            upsertCachedRow(CACHE_KEY, queuedUpdate);
+            editStates[product.uuid] = false;
+            editError[product.uuid] = t('products.messages.pending_sync');
+            return;
+        }
 
         editStates[product.uuid] = false;
         await loadProducts();
@@ -172,7 +252,14 @@ async function deleteProduct(product) {
     deleteSaving[product.uuid] = true;
 
     try {
-        await http.delete(`/api/product/${product.uuid}`);
+        const response = await http.delete(`/api/product/${product.uuid}`);
+
+        if (response?.data?.queued || !navigator.onLine) {
+            products.value = products.value.filter((item) => item.uuid !== product.uuid);
+            removeCachedRow(CACHE_KEY, product.uuid);
+            return;
+        }
+
         await loadProducts();
     } catch (error) {
         if (error?.response?.status === 409) {
@@ -184,6 +271,16 @@ async function deleteProduct(product) {
         deleteSaving[product.uuid] = false;
     }
 }
+
+onMounted(() => {
+    window.addEventListener('offline-queue:synced', handleQueueSynced);
+    window.addEventListener('offline-queue:dropped', handleQueueDropped);
+});
+
+onBeforeUnmount(() => {
+    window.removeEventListener('offline-queue:synced', handleQueueSynced);
+    window.removeEventListener('offline-queue:dropped', handleQueueDropped);
+});
 
 void loadProducts();
 </script>
@@ -236,6 +333,7 @@ void loadProducts();
                     {{ savingAdd ? t('products.actions.saving') : t('products.actions.save_product') }}
                 </button>
                 <p v-if="addError" class="text-sm text-red-700">{{ addError }}</p>
+                <p v-if="addMessage" class="text-sm text-[#2f6e4a]">{{ addMessage }}</p>
             </div>
         </form>
 
@@ -262,6 +360,7 @@ void loadProducts();
                     <div>
                         <h3 class="text-lg font-semibold text-[#1f2a1d]">{{ product.name || t('products.unnamed') }}</h3>
                         <p class="text-sm text-[#4e5f4f]">{{ t('products.fields.unit') }}: {{ product.unit || '-' }}</p>
+                        <p v-if="product.pending_sync" class="text-xs text-[#2f6e4a]">{{ t('products.messages.pending_sync') }}</p>
                     </div>
 
                     <div class="flex items-center gap-2">
